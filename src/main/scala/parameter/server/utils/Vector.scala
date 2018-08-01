@@ -9,6 +9,9 @@ class Vector(val value: Array[Double]) extends Serializable {
 
   def addition(other: Vector): Vector =
     Vector.vectorSum(this, other)
+
+  override def toString: String =
+    value.tail.foldLeft(value.head.toString)((acc, c) => acc + "," + c.toString)
 }
 
 object Vector {
