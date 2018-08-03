@@ -1,6 +1,8 @@
 package parameter.server.utils
 
-class Vector(val value: Array[Double]) extends Serializable {
+import parameter.server.utils.Types.Parameter
+
+case class Vector(value: Array[Double]) extends Serializable with Parameter {
   lazy val length: Double = Vector.vectorLengthSqr(this)
 
 
@@ -15,8 +17,8 @@ class Vector(val value: Array[Double]) extends Serializable {
 }
 
 object Vector {
-  def apply(value: Array[Double]): Vector = new Vector(value)
 
+  def apply(n: Int): Vector = new Vector(Array.ofDim[Double](n))
   /**
     * Returns the squared length of a vector
     *

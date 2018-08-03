@@ -5,8 +5,7 @@ import scala.collection.mutable
 object Types {
 
   // Represents an arbitrary element of a machine learning model (e.g. weight of feature)
-  type Parameter = Any
-  type ParameterUpdate = Any
+  trait Parameter
 
   // Represents the input of the parameter server
   abstract class WorkerInput(val destination: AnyVal)

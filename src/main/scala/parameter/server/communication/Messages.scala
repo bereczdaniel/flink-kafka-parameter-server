@@ -1,24 +1,24 @@
 package parameter.server.communication
 
-import parameter.server.utils.Types.{Parameter, ParameterUpdate}
+import parameter.server.utils.Types.Parameter
 
 object Messages {
 
-  abstract class Message(src: AnyVal, dest: AnyVal, msg: Option[Any]){
-    def source: AnyVal = src
-    def destination: AnyVal = dest
-    def message: Option[Any] = msg
+  abstract class Message[K1, K2, M](src: K1, dest: K2, msg: Option[M]){
+    def source: K1 = src
+    def destination: K2= dest
+    def message: Option[M] = msg
   }
 
-  case class Push(src: AnyVal, dest: AnyVal, msg: ParameterUpdate) extends Message(src, dest, Some(msg)) {
+  case class Push[WK, SK, P <: Parameter](src: WK, dest: SK, msg: P) extends Message(src, dest, Some(msg)) {
     override def toString: String =
       s"Push:$src:$dest:$msg"
   }
-  case class Pull(src: AnyVal, dest: AnyVal) extends Message(src, dest, None) {
+  case class Pull[WK, SK, P <: Parameter](src: WK, dest: SK) extends Message[WK, SK, P](src, dest, None) {
     override def toString: String =
       s"Pull:$src:$dest"
   }
-  case class PullAnswer(src: AnyVal, dest: AnyVal, msg: Parameter) extends Message(src, dest, Some(msg)) {
+  case class PullAnswer[WK, SK, P <: Parameter](src: SK, dest: WK, msg: P) extends Message(src, dest, Some(msg)) {
     override def toString: String =
       s"$src:$dest:$msg"
   }
