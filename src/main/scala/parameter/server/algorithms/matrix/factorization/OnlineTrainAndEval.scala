@@ -1,22 +1,28 @@
 package parameter.server.algorithms.matrix.factorization
 
 import eu.streamline.hackathon.flink.scala.job.parameter.server.factors.RangedRandomFactorInitializerDescriptor
+import org.apache.flink.api.common.functions.FlatMapFunction
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.util.Collector
 import parameter.server.ParameterServer
-import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
+import parameter.server.algorithms.Metrics
+import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
-import parameter.server.utils.IDGenerator
+import parameter.server.utils.Types.ParameterServerOutput
+import parameter.server.utils.{IDGenerator, Types, Vector}
 
 object OnlineTrainAndEval {
 
   def main(args: Array[String]): Unit = {
     val K = 100
+    val n = 10
+    val learningRate = 0.01
     val parallelism = 4
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(parallelism)
 
 
-    lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(10, -0.001, 0.001)
+    lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(n, -0.001, 0.001)
 
     val source = env
       .readTextFile("data/lastFM/perf.csv")
@@ -25,35 +31,71 @@ object OnlineTrainAndEval {
         EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
       })
 
-    val ps = new ParameterServer(
+    val ps = new ParameterServer[EvaluationRequest, Vector, Int, Int](
       env,
       src = source,
-      workerLogic = new TrainAndEvalWorkerLogic, serverLogic = new TrainAndEvalServerLogic,
+      workerLogic = new TrainAndEvalWorkerLogic(n, learningRate, 9, -0.01, 0.01, 100, 75),
+      serverLogic = new TrainAndEvalServerLogic(x => Vector(factorInitDesc.open().nextFactor(x.hashCode())), Vector.vectorSum),
       serverToWorkerParse = pullAnswerFromString, workerToServerParse = workerToServerParse,
       host = "localhost:", port = 9093, serverToWorkerTopic = "serverToWorkerTopic", workerToServerTopic = "workerToServerTopic",
       broadcastServerToWorkers = true)
 
-    ps
+    val topKOut = ps
       .start()
-      .print()
+        .flatMap(new FlatMapFunction[ParameterServerOutput, EvaluationOutput] {
+          override def flatMap(value: ParameterServerOutput, out: Collector[EvaluationOutput]): Unit = {
+            value match {
+              case eval: EvaluationOutput => out.collect(eval)
+              case _ => throw new NotSupportedOutput
+            }
+          }
+        })
+
+
+    val mergedTopK: DataStream[(Long, Double, Long)] = topKOut
+      .keyBy(_.evaluationId)
+      .flatMapWithState((localTopK: EvaluationOutput, aggregatedTopKs: Option[List[EvaluationOutput]]) => {
+        aggregatedTopKs match {
+          case None =>
+            (List.empty, Some(List(localTopK)))
+          case Some(currentState) =>
+            if(currentState.length < parallelism-1) {
+              (List.empty, Some(currentState.++:(List(localTopK))))
+            }
+            else {
+              val allTopK = currentState.++(List(localTopK))
+              val topK = allTopK.map(_.topK).fold(Types.createTopK)((a, b) => a ++ b).toList.map(_._1).distinct.take(K)
+              val targetItemId = allTopK.maxBy(_.itemId).itemId
+              val ts = allTopK.maxBy(_.ts).ts
+              (List((localTopK.evaluationId, Metrics.ndcg(topK, targetItemId), ts)), None)
+            }
+        }
+      })
+
+
+    mergedTopK
+        .print()
+
 
     env.execute()
 
   }
 
-  def workerToServerParse(line: String): Message = {
+
+
+  def workerToServerParse(line: String): Message[Int, Int, Vector] = {
     val fields = line.split(":")
 
     fields.head match {
       case "Pull" => Pull(fields(1).toInt, fields(2).toInt)
-      case "Push" => Push(fields(1).toInt, fields(2).toInt, Some(Vector(fields(3).split(",").map(_.toDouble))))
+      case "Push" => Push(fields(1).toInt, fields(2).toInt, Vector(fields(3).split(",").map(_.toDouble)))
       case _ =>
         throw new NotSupportedMessage
         null
     }
   }
 
-  def pullAnswerFromString(line: String): PullAnswer = {
+  def pullAnswerFromString(line: String): PullAnswer[Int, Int, Vector] = {
     val fields = line.split(":")
     PullAnswer(fields(0).toInt, fields(1).toInt, Vector(fields(2).split(",").map(_.toDouble)))
   }

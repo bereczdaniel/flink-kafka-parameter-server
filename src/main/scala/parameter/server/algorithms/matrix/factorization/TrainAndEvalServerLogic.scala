@@ -1,26 +1,31 @@
 package parameter.server.algorithms.matrix.factorization
 
 import org.apache.flink.util.Collector
-import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationOutput
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
 import parameter.server.logic.server.ServerLogic
+import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
 import scala.collection.mutable
 
-class TrainAndEvalServerLogic extends ServerLogic {
-  val model = new mutable.HashMap[AnyVal, Vector]()
+class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector) extends ServerLogic[Int, Int, Vector] {
+  val model = new mutable.HashMap[Int, Vector]()
 
-  override def onPullReceive(push: Messages.Pull, out: Collector[Either[Types.ParameterServerOutput, Messages.Message]]): Unit = {
-    out.collect(Right(PullAnswer(push.destination, push.source, model.getOrElseUpdate(push.destination, Vector(Array.fill(10)(scala.util.Random.nextDouble()))))))
+  @transient lazy val init: Int => Vector = _init
+  @transient lazy val update: (Vector, Vector) => Vector = _update
+
+  override def onPullReceive(pull: Messages.Pull[Int, Int, Vector], out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Int, Vector]]]): Unit = {
+    out.collect(Right(PullAnswer(pull.dest, pull.src, model.getOrElseUpdate(pull.dest, init(pull.dest)))))
   }
 
-  override def onPushReceive(pull: Messages.Push, out: Collector[Either[Types.ParameterServerOutput, Messages.Message]]): Unit = {
-    out.collect(Left(EvaluationOutput(0,0, Types.createTopK, 0L)))
+  override def onPushReceive(push: Messages.Push[Int, Int, Vector], out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Int, Vector]]]): Unit = {
+    val oldParam = model(push.destination)
+
+    model.update(push.destination, update(oldParam, push.msg))
   }
 }
 
 object TrainAndEvalServerLogic {
-  def apply: TrainAndEvalServerLogic = new TrainAndEvalServerLogic()
+  def apply(_init: ItemId => Vector, _update: (Vector, Vector) => Vector): TrainAndEvalServerLogic = new TrainAndEvalServerLogic(_init, _update)
 }
