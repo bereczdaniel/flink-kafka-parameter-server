@@ -18,7 +18,7 @@ import scala.util.control.Breaks._
 class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
                               rangeMin: Double, rangeMax: Double,
                               workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5))
-  extends WorkerLogic[Int, Int, EvaluationRequest, Vector]{
+  extends WorkerLogic[Long, Int, EvaluationRequest, Vector]{
 
   lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
   lazy val SGDUpdater = new SGDUpdater(learningRate)
@@ -27,7 +27,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
   def itemIds: Array[ItemId] = model.keySet.toArray
   val itemIdsDescendingByLength = new mutable.TreeSet[(ItemId, Double)]()(Types.topKOrdering)
 
-  val requestBuffer = new mutable.HashMap[Int, EvaluationRequest]()
+  val requestBuffer = new mutable.HashMap[Long, EvaluationRequest]()
 
   def generateLocalTopK(userVector: Vector, pruningStrategy: LEMPPruningStrategy): TopK = {
 
@@ -143,7 +143,8 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
     Vector.vectorSum(negativeUserDelta, Vector(positiveUserDelta))
   }
 
-  override def onPullReceive(msg: Messages.Message[Int, Int, Vector], out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Int, Vector]]]): Unit = {
+  override def onPullReceive(msg: Messages.Message[Long, Int, Vector],
+                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
     val userVector = msg.message.get
 
 
@@ -165,9 +166,10 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
     }
   }
 
-  override def onInputReceive(data: EvaluationRequest, out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Int, Vector]]]): Unit = {
-    requestBuffer.update(data.itemId, data)
+  override def onInputReceive(data: EvaluationRequest,
+                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+    requestBuffer.update(data.evaluationId, data)
 
-    out.collect(Right(Pull(data.itemId, data.userId)))
+    out.collect(Right(Pull(data.evaluationId, data.userId)))
   }
 }
