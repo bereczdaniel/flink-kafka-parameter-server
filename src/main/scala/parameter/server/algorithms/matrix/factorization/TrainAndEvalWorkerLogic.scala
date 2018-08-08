@@ -143,7 +143,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
     Vector.vectorSum(negativeUserDelta, Vector(positiveUserDelta))
   }
 
-  override def onPullReceive(msg: Messages.Message[Long, Int, Vector],
+  override def onPullReceive(msg: Messages.Message[Int, Long, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
     val userVector = msg.message.get
 
@@ -162,6 +162,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
         val userDelta: Vector = train(userVector, request, itemVector)
 
         out.collect(Right(Push(msg.destination, msg.source, userDelta)))
+
         out.collect(Left(EvaluationOutput(request.itemId, request.evaluationId, topK, request.ts)))
     }
   }

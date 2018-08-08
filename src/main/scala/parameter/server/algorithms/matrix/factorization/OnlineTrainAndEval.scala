@@ -3,6 +3,10 @@ package parameter.server.algorithms.matrix.factorization
 import eu.streamline.hackathon.flink.scala.job.parameter.server.factors.RangedRandomFactorInitializerDescriptor
 import org.apache.flink.api.common.functions.FlatMapFunction
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.streaming.api.scala.function.ProcessAllWindowFunction
+import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows
+import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
 import parameter.server.ParameterServer
 import parameter.server.algorithms.Metrics
@@ -25,13 +29,13 @@ object OnlineTrainAndEval {
     lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(n, -0.001, 0.001)
 
     val source = env
-      .readTextFile("data/lastFM/perf.csv")
+      .readTextFile("data/lastFM/sliced/first_10")
       .map(line => {
         val fields = line.split(",")
         EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
       })
 
-    val ps = new ParameterServer[EvaluationRequest, Vector, Int, Int](
+    val ps = new ParameterServer[EvaluationRequest, Vector, Long, Int](
       env,
       src = source,
       workerLogic = new TrainAndEvalWorkerLogic(n, learningRate, 9, -0.01, 0.01, 100, 75),
@@ -52,7 +56,7 @@ object OnlineTrainAndEval {
         })
 
 
-    val mergedTopK: DataStream[(Long, Double, Long)] = topKOut
+    val mergedTopK: DataStream[(Long, Double)] = topKOut
       .keyBy(_.evaluationId)
       .flatMapWithState((localTopK: EvaluationOutput, aggregatedTopKs: Option[List[EvaluationOutput]]) => {
         aggregatedTopKs match {
@@ -71,6 +75,16 @@ object OnlineTrainAndEval {
             }
         }
       })
+        .windowAll(ProcessingTimeSessionWindows.withGap(Time.seconds(10)))
+        .process(new ProcessAllWindowFunction[(Long, Double, Long), (Long, Double), TimeWindow] {
+          override def process(context: Context, elements: Iterable[(Long, Double, Long)], out: Collector[(Long, Double)]): Unit = {
+            val grouped = elements
+              .groupBy(x => x._3 / 86400)
+
+            grouped
+              .foreach(x => out.collect((x._1, x._2.map(_._2).sum / x._2.size)))
+          }
+        })
 
 
     mergedTopK
@@ -83,20 +97,20 @@ object OnlineTrainAndEval {
 
 
 
-  def workerToServerParse(line: String): Message[Int, Int, Vector] = {
+  def workerToServerParse(line: String): Message[Long, Int, Vector] = {
     val fields = line.split(":")
 
     fields.head match {
-      case "Pull" => Pull(fields(1).toInt, fields(2).toInt)
-      case "Push" => Push(fields(1).toInt, fields(2).toInt, Vector(fields(3).split(",").map(_.toDouble)))
+      case "Pull" => Pull(fields(1).toLong, fields(2).toInt)
+      case "Push" => Push(fields(1).toLong, fields(2).toInt, Vector(fields(3).split(",").map(_.toDouble)))
       case _ =>
         throw new NotSupportedMessage
         null
     }
   }
 
-  def pullAnswerFromString(line: String): PullAnswer[Int, Int, Vector] = {
+  def pullAnswerFromString(line: String): PullAnswer[Long, Int, Vector] = {
     val fields = line.split(":")
-    PullAnswer(fields(0).toInt, fields(1).toInt, Vector(fields(2).split(",").map(_.toDouble)))
+    PullAnswer(fields(0).toInt, fields(1).toLong, Vector(fields(2).split(",").map(_.toDouble)))
   }
 }

@@ -16,12 +16,12 @@ class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) =>
   @transient lazy val update: (Vector, Vector) => Vector = _update
 
   override def onPullReceive(pull: Messages.Pull[Long, Int, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     out.collect(Right(PullAnswer(pull.dest, pull.src, model.getOrElseUpdate(pull.dest, init(pull.dest)))))
   }
 
   override def onPushReceive(push: Messages.Push[Long, Int, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     val oldParam = model(push.destination)
 
     model.update(push.destination, update(oldParam, push.msg))
