@@ -14,5 +14,5 @@ object RecSysMessages {
       id.toString + ":" + parameter.value.tail.foldLeft(parameter.value.head.toString)((acc, c) => acc + "," + c.toString)
   }
 
-  case class EvaluationOutput(itemId: Int, evaluationId: Long, topK: TopK, ts: Long) extends ParameterServerOutput
+  case class EvaluationOutput(itemId: Int, evaluationId: Long, topK: List[(ItemId, Double)], ts: Long) extends ParameterServerOutput
 }

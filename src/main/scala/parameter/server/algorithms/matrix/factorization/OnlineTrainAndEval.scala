@@ -2,6 +2,7 @@ package parameter.server.algorithms.matrix.factorization
 
 import eu.streamline.hackathon.flink.scala.job.parameter.server.factors.RangedRandomFactorInitializerDescriptor
 import org.apache.flink.api.common.functions.FlatMapFunction
+import org.apache.flink.core.fs.FileSystem
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.scala.function.ProcessAllWindowFunction
 import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows
@@ -12,8 +13,8 @@ import parameter.server.ParameterServer
 import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
-import parameter.server.utils.Types.ParameterServerOutput
-import parameter.server.utils.{IDGenerator, Types, Vector}
+import parameter.server.utils.Types.{ItemId, ParameterServerOutput}
+import parameter.server.utils.{IDGenerator, Vector}
 
 object OnlineTrainAndEval {
 
@@ -56,7 +57,7 @@ object OnlineTrainAndEval {
         })
 
 
-    val mergedTopK: DataStream[(Long, Double)] = topKOut
+    val mergedTopK = topKOut
       .keyBy(_.evaluationId)
       .flatMapWithState((localTopK: EvaluationOutput, aggregatedTopKs: Option[List[EvaluationOutput]]) => {
         aggregatedTopKs match {
@@ -68,10 +69,11 @@ object OnlineTrainAndEval {
             }
             else {
               val allTopK = currentState.++(List(localTopK))
-              val topK = allTopK.map(_.topK).fold(Types.createTopK)((a, b) => a ++ b).toList.distinct.sortBy(-_._2).map(_._1).take(K)
+              val topK = allTopK.map(_.topK).fold(List[(ItemId, Double)]())((a, b) => a ++ b).distinct.sortBy(-_._2).map(_._1).take(K)
               val targetItemId = allTopK.maxBy(_.itemId).itemId
               val ts = allTopK.maxBy(_.ts).ts
-              (List((localTopK.evaluationId, Metrics.ndcg(topK, targetItemId), ts)), None)
+              val nDCG = Metrics.ndcg(topK, targetItemId)
+              (List((localTopK.evaluationId, nDCG, ts)), None)
             }
         }
       })
@@ -83,12 +85,13 @@ object OnlineTrainAndEval {
 
           grouped
             .foreach(x => out.collect((x._1, x._2.map(_._2).sum / x._2.size)))
+          out.collect((0L, elements.map(_._2).sum / elements.size))
         }
       })
 
 
     mergedTopK
-        .print()
+        .writeAsText("data/output/10_nDCG", FileSystem.WriteMode.OVERWRITE)
 
 
     env.execute()

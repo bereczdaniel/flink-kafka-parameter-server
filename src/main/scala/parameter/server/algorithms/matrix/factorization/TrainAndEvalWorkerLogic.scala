@@ -8,8 +8,8 @@ import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
 import parameter.server.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{ItemId, TopK}
-import parameter.server.utils.{Types, Vector}
+import parameter.server.utils.Types.ItemId
+import parameter.server.utils.{Profiling, Types, Vector}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -29,24 +29,26 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
 
   val requestBuffer = new mutable.HashMap[Long, EvaluationRequest]()
 
-  def generateLocalTopK(userVector: Vector, pruningStrategy: LEMPPruningStrategy): TopK = {
+  def generateLocalTopK(userVector: Vector, pruningStrategy: LEMPPruningStrategy): List[(ItemId, Double)] = {
 
     val topK = Types.createTopK
     val buckets = itemIdsDescendingByLength.toList.grouped(bucketSize)
 
     val userVectorLength = userVector.length
 
+
     breakable {
+      Profiling.time("break",
       for (currentBucket <- buckets) {
         if (!((topK.length < workerK) || (currentBucket.head._2 * userVectorLength > topK.head._2))) {
           break()
         }
-        val (focus, focusSet) = generateFocusSet(userVector, pruningStrategy)
+        val (focus, focusSet) =  generateFocusSet(userVector, pruningStrategy)
 
         val candidates = pruneCandidateSet(topK, currentBucket, pruningStrategy, focus, focusSet, userVector)
 
         //TODO check math
-        for (item <- candidates) {
+       for (item <- candidates) {
           val userItemDotProduct = Vector.dotProduct(userVector, item._2)
 
           if (topK.size < workerK) {
@@ -59,9 +61,9 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
             }
           }
         }
-      }
+      })
     }
-    topK
+    topK.toList
   }
 
 
@@ -111,7 +113,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
                         userVector: Vector): List[(ItemId, Vector)] = {
     val theta = if (topK.length < workerK) 0.0 else topK.head._2
     val theta_b_q = theta / (currentBucket.head._2 * userVector.length)
-    val vectors = currentBucket.map(x => (x._2, model(x._2)))
+    val vectors = currentBucket.map(x => (x._1, model(x._1)))
 
 
 
@@ -139,7 +141,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
 
     val updatedItemVector = Vector.vectorSum(itemVector, Vector(positiveItemDelta))
     model.update(request.itemId, updatedItemVector)
-    itemIdsDescendingByLength.add((updatedItemVector.length, request.itemId))
+    itemIdsDescendingByLength.add((request.itemId, updatedItemVector.length))
     Vector.vectorSum(negativeUserDelta, Vector(positiveUserDelta))
   }
 
