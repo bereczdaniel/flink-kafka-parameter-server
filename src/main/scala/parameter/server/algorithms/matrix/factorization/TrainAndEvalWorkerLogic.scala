@@ -37,8 +37,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
     val userVectorLength = userVector.length
 
 
-    breakable {
-      Profiling.time("break",
+    breakable {Profiling.time("breakable",
       for (currentBucket <- buckets) {
         if (!((topK.length < workerK) || (currentBucket.head._2 * userVectorLength > topK.head._2))) {
           break()
@@ -113,7 +112,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
                         userVector: Vector): List[(ItemId, Vector)] = {
     val theta = if (topK.length < workerK) 0.0 else topK.head._2
     val theta_b_q = theta / (currentBucket.head._2 * userVector.length)
-    val vectors = currentBucket.map(x => (x._1, model(x._1)))
+    val vectors = currentBucket.map(x => (x._2, model(x._2)))
 
 
 
