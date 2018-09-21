@@ -37,16 +37,17 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
     val userVectorLength = userVector.length
 
 
-    breakable {Profiling.time("breakable",
+    breakable { Profiling.time("breakable",
       for (currentBucket <- buckets) {
-        if (!((topK.length < workerK) || (currentBucket.head._2 * userVectorLength > topK.head._2))) {
+        if ( Profiling.time("predicate", !((topK.length < workerK) || (currentBucket.head._2 * userVectorLength > topK.head._2)))) {
           break()
         }
-        val (focus, focusSet) =  generateFocusSet(userVector, pruningStrategy)
+        val (focus, focusSet) = Profiling.time("generate", generateFocusSet(userVector, pruningStrategy))
 
-        val candidates = pruneCandidateSet(topK, currentBucket, pruningStrategy, focus, focusSet, userVector)
+        val candidates =Profiling.time("prune", pruneCandidateSet(topK, currentBucket, pruningStrategy, focus, focusSet, userVector))
 
         //TODO check math
+        Profiling.time("iter",
        for (item <- candidates) {
           val userItemDotProduct = Vector.dotProduct(userVector, item._2)
 
@@ -59,7 +60,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
               topK += (( item._1, userItemDotProduct))
             }
           }
-        }
+        })
       })
     }
     topK.toList
@@ -112,7 +113,7 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
                         userVector: Vector): List[(ItemId, Vector)] = {
     val theta = if (topK.length < workerK) 0.0 else topK.head._2
     val theta_b_q = theta / (currentBucket.head._2 * userVector.length)
-    val vectors = currentBucket.map(x => (x._2, model(x._2)))
+    val vectors = currentBucket.map(x => (x._1, model(x._1)))
 
 
 

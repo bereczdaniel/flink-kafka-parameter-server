@@ -91,7 +91,7 @@ object OnlineTrainAndEval {
 
 
     mergedTopK
-        .writeAsText("data/output/10_nDCG", FileSystem.WriteMode.OVERWRITE)
+        .writeAsText("data/output/10_nDCG", FileSystem.WriteMode.OVERWRITE).setParallelism(1)
 
 
     env.execute()
