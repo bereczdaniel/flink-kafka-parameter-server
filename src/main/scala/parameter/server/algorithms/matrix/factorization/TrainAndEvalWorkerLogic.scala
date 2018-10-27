@@ -9,7 +9,7 @@ import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.ItemId
-import parameter.server.utils.{Profiling, Types, Vector}
+import parameter.server.utils.{Types, Vector}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -37,17 +37,16 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
     val userVectorLength = userVector.length
 
 
-    breakable { Profiling.time("breakable",
+    breakable {
       for (currentBucket <- buckets) {
-        if ( Profiling.time("predicate", !((topK.length < workerK) || (currentBucket.head._2 * userVectorLength > topK.head._2)))) {
+        if ( !((topK.length < workerK) || (currentBucket.head._2 * userVectorLength > topK.head._2))) {
           break()
         }
-        val (focus, focusSet) = Profiling.time("generate", generateFocusSet(userVector, pruningStrategy))
+        val (focus, focusSet) =  generateFocusSet(userVector, pruningStrategy)
 
-        val candidates =Profiling.time("prune", pruneCandidateSet(topK, currentBucket, pruningStrategy, focus, focusSet, userVector))
+        val candidates = pruneCandidateSet(topK, currentBucket, pruningStrategy, focus, focusSet, userVector)
 
         //TODO check math
-        Profiling.time("iter",
        for (item <- candidates) {
           val userItemDotProduct = Vector.dotProduct(userVector, item._2)
 
@@ -60,8 +59,8 @@ class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSam
               topK += (( item._1, userItemDotProduct))
             }
           }
-        })
-      })
+        }
+      }
     }
     topK.toList
   }
