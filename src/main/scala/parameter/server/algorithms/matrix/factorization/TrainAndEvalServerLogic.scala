@@ -1,5 +1,6 @@
 package parameter.server.algorithms.matrix.factorization
 
+import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
@@ -7,24 +8,23 @@ import parameter.server.logic.server.ServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
-import scala.collection.mutable
-
 class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector) extends ServerLogic[Long, Int, Vector] {
-  val model = new mutable.HashMap[Int, Vector]()
+  override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
+    new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
 
   @transient lazy val init: Int => Vector = _init
   @transient lazy val update: (Vector, Vector) => Vector = _update
 
   override def onPullReceive(pull: Messages.Pull[Long, Int, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
-    out.collect(Right(PullAnswer(pull.dest, pull.src, model.getOrElseUpdate(pull.dest, init(pull.dest)))))
+    out.collect(Right(PullAnswer(pull.dest, pull.src, getOrElseUpdate(init(pull.dest)))))
   }
 
   override def onPushReceive(push: Messages.Push[Long, Int, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
-    val oldParam = model(push.destination)
+    val oldParam = model.value()
 
-    model.update(push.destination, update(oldParam, push.msg))
+    model.update(update(oldParam, push.msg))
   }
 }
 
