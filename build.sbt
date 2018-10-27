@@ -1,4 +1,4 @@
-name := "ParameterServer"
+name := "flink-kafka-parameter-server"
 
 version := "0.1"
 
