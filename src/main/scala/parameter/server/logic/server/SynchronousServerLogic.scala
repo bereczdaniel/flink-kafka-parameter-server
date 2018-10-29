@@ -7,7 +7,7 @@ import parameter.server.communication.Messages.{Message, NotSupportedMessage, Pu
 import parameter.server.utils.Types.{Parameter, ParameterServerOutput}
 
 abstract class SynchronousServerLogic[WK, SK, P <: Parameter]
-  extends ProcessFunction[Message[WK, SK, P],  Either[ParameterServerOutput, Message[SK, WK, P]]]{
+  extends ServerLogic[WK, SK, P] {
 
   override def processElement(value: Message[WK, SK, P],
                               ctx: ProcessFunction[Message[WK, SK, P], Either[ParameterServerOutput, Message[SK, WK, P]]]#Context,
@@ -33,6 +33,7 @@ abstract class SynchronousServerLogic[WK, SK, P <: Parameter]
   override def onTimer(timestamp: Long,
                        ctx: ProcessFunction[Message[WK, SK, P], Either[ParameterServerOutput, Message[SK, WK, P]]]#OnTimerContext,
                        out: Collector[Either[ParameterServerOutput, Message[SK, WK, P]]]): Unit = {
+    println("onTimer")
     if(activeUpdate)
       ctx.timerService().registerProcessingTimeTimer(5000)
     else{
@@ -43,18 +44,18 @@ abstract class SynchronousServerLogic[WK, SK, P <: Parameter]
 
   var activeUpdate: Boolean = false
 
-  val parameter: ValueState[P]
+  val model: ValueState[P]
   lazy val unansweredPulls: ListState[Pull[WK, SK, P]] =
     getRuntimeContext
       .getListState(new ListStateDescriptor[Pull[WK, SK, P]]("unanswered messages", classOf[Pull[WK, SK, P]]))
 
   def getOrElseUpdate(newVector: P): P ={
-    if(parameter.value() == null){
-      parameter.update(newVector)
+    if(model.value() == null){
+      model.update(newVector)
       newVector
     }
     else{
-      parameter.value()
+      model.value()
     }
   }
 

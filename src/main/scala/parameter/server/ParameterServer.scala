@@ -8,19 +8,19 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages.Message
-import parameter.server.logic.server.ServerLogic
+import parameter.server.logic.server.{AsynchronousServerLogic, ServerLogic}
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
 
 class ParameterServer[T <: WorkerInput,
                       P <: Parameter,
                       WK, SK](
-                         env: StreamExecutionEnvironment,
-                         src: DataStream[T],
-                         workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
-                         serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
-                         host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
-                         broadcastServerToWorkers: Boolean = false) {
+                               env: StreamExecutionEnvironment,
+                               src: DataStream[T],
+                               workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
+                               serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
+                               host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
+                               broadcastServerToWorkers: Boolean = false) {
 
   def start(): DataStream[ParameterServerOutput] = {
     init()
@@ -70,7 +70,7 @@ class ParameterServer[T <: WorkerInput,
 
   def serverStream(serverInputStream: DataStream[Message[WK, SK, P]]): DataStream[Either[ParameterServerOutput, Message[SK, WK, P]]] =
     serverInputStream
-    .flatMap(serverLogic)
+      .process(serverLogic)
 
   def serverToWorkerStream(serverLogicStream: DataStream[Either[ParameterServerOutput,  Message[SK, WK, P]]]): DataStream[ParameterServerOutput] = {
     serverLogicStream
