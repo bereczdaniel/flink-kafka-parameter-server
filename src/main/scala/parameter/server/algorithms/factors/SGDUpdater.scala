@@ -1,4 +1,4 @@
-package eu.streamline.hackathon.flink.scala.job.parameter.server.factors
+package parameter.server.algorithms.factors
 
 class SGDUpdater(learningRate: Double) extends FactorUpdater {
 

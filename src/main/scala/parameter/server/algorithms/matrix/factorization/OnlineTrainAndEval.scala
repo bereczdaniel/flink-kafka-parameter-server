@@ -1,6 +1,5 @@
 package parameter.server.algorithms.matrix.factorization
 
-import eu.streamline.hackathon.flink.scala.job.parameter.server.factors.RangedRandomFactorInitializerDescriptor
 import org.apache.flink.api.common.functions.FlatMapFunction
 import org.apache.flink.core.fs.FileSystem
 import org.apache.flink.streaming.api.scala._
@@ -11,6 +10,7 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
 import parameter.server.ParameterServer
 import parameter.server.algorithms.Metrics
+import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
 import parameter.server.utils.Types.{ItemId, ParameterServerOutput}
@@ -42,7 +42,7 @@ object OnlineTrainAndEval {
       workerLogic = new TrainAndEvalWorkerLogic(n, learningRate, 9, -0.001, 0.001, 100, 75),
       serverLogic = new TrainAndEvalServerLogic(x => Vector(factorInitDesc.open().nextFactor(x.hashCode())), Vector.vectorSum),
       serverToWorkerParse = pullAnswerFromString, workerToServerParse = workerToServerParse,
-      host = "localhost:", port = 9093, serverToWorkerTopic = "serverToWorkerTopic", workerToServerTopic = "workerToServerTopic",
+      host = "localhost:", port = 9092, serverToWorkerTopic = "serverToWorkerTopic", workerToServerTopic = "workerToServerTopic",
       broadcastServerToWorkers = true)
 
     val topKOut = ps
@@ -91,7 +91,7 @@ object OnlineTrainAndEval {
 
 
     mergedTopK
-        .writeAsText("data/output/10_nDCG", FileSystem.WriteMode.OVERWRITE).setParallelism(1)
+        .writeAsText("data/output/10_nDCG_synchronous", FileSystem.WriteMode.OVERWRITE).setParallelism(1)
 
 
     env.execute()

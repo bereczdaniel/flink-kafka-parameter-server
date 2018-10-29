@@ -1,7 +1,7 @@
 package parameter.server.algorithms.matrix.factorization
 
-import eu.streamline.hackathon.flink.scala.job.parameter.server.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
 import org.apache.flink.util.Collector
+import parameter.server.algorithms.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.algorithms.pruning.LEMPPruningFunctions._
 import parameter.server.algorithms.pruning._
