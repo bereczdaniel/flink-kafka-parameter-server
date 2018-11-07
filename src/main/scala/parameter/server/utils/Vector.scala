@@ -14,6 +14,13 @@ case class Vector(value: Array[Double]) extends Serializable with Parameter {
 
   override def toString: String =
     value.tail.foldLeft(value.head.toString)((acc, c) => acc + "," + c.toString)
+
+  override def equals(o: Any): Boolean = {
+    o match {
+      case o: Vector => o.value sameElements value
+      case _ => false
+    }
+  }
 }
 
 object Vector {

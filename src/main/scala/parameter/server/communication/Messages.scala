@@ -8,6 +8,14 @@ object Messages {
     def source: K1 = src
     def destination: K2= dest
     def message: Option[M] = msg
+
+    override def equals(o: Any): Boolean = {
+      o match {
+        case o: Message[K1, K2, M] =>
+          o.destination == destination && o.source == source && o.message == message
+        case _ => false
+      }
+    }
   }
 
   case class Push[WK, SK, P <: Parameter](src: WK, dest: SK, msg: P) extends Message(src, dest, Some(msg)) {
