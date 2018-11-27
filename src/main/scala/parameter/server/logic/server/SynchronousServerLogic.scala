@@ -33,10 +33,11 @@ abstract class SynchronousServerLogic[WK, SK, P <: Parameter]
   override def onTimer(timestamp: Long,
                        ctx: ProcessFunction[Message[WK, SK, P], Either[ParameterServerOutput, Message[SK, WK, P]]]#OnTimerContext,
                        out: Collector[Either[ParameterServerOutput, Message[SK, WK, P]]]): Unit = {
-    println("onTimer")
+    //println("onTimer")
     if(activeUpdate)
       ctx.timerService().registerProcessingTimeTimer(5000)
     else{
+      // TODO this branch is not called ! Many Pull messages go into the unansweredPulls and they are not actually processed.
       activeUpdate=true
       onPullReceive(unansweredPulls.get().iterator().next(), out)
     }
