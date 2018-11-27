@@ -18,6 +18,7 @@ class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) =>
 
   override def onPullReceive(pull: Messages.Pull[Long, Int, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
+    println(s"Pull received: $pull.dest from $pull.src")
     out.collect(Right(PullAnswer(pull.dest, pull.src, getOrElseUpdate(init(pull.dest)))))
   }
 
