@@ -30,7 +30,8 @@ object OnlineTrainAndEval {
     lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(n, -0.001, 0.001)
 
     val source = env
-      .readTextFile("data/lastFM/sliced/first_10")
+      //.readTextFile("data/lastFM/sliced/first_10")
+      .readTextFile("data/recsys-2017-tutorial/1000_test_batch.csv")
       .map(line => {
         val fields = line.split(",")
         EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
