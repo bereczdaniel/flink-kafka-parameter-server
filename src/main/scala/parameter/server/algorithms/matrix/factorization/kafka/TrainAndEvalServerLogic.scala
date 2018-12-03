@@ -1,10 +1,10 @@
-package parameter.server.algorithms.matrix.factorization
+package parameter.server.algorithms.matrix.factorization.kafka
 
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
-import parameter.server.logic.server.{AsynchronousServerLogic, SynchronousServerLogic}
+import parameter.server.kafka.logic.server.SynchronousServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 

@@ -1,4 +1,4 @@
-package parameter.server.algorithms.matrix.factorization
+package parameter.server.algorithms.matrix.factorization.kafka
 
 import org.apache.flink.util.Collector
 import parameter.server.algorithms.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
@@ -7,7 +7,7 @@ import parameter.server.algorithms.pruning.LEMPPruningFunctions._
 import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
-import parameter.server.logic.worker.WorkerLogic
+import parameter.server.kafka.logic.worker.WorkerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 

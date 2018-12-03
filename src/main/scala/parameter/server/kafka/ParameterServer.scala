@@ -1,4 +1,4 @@
-package parameter.server
+package parameter.server.kafka
 
 import java.util.Properties
 
@@ -8,8 +8,8 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages.Message
-import parameter.server.logic.server.{AsynchronousServerLogic, ServerLogic}
-import parameter.server.logic.worker.WorkerLogic
+import parameter.server.kafka.logic.server.ServerLogic
+import parameter.server.kafka.logic.worker.WorkerLogic
 import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
 
 class ParameterServer[T <: WorkerInput,

@@ -1,4 +1,4 @@
-package parameter.server.logic.server
+package parameter.server.kafka.logic.server
 
 import org.apache.flink.streaming.api.functions.ProcessFunction
 import parameter.server.communication.Messages.Message

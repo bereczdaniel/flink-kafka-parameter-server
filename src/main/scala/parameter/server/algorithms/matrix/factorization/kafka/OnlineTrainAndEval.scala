@@ -1,4 +1,4 @@
-package parameter.server.algorithms.matrix.factorization
+package parameter.server.algorithms.matrix.factorization.kafka
 
 import org.apache.flink.api.common.functions.FlatMapFunction
 import org.apache.flink.core.fs.FileSystem
@@ -8,11 +8,11 @@ import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionW
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
-import parameter.server.ParameterServer
 import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
+import parameter.server.kafka.ParameterServer
 import parameter.server.utils.Types.{ItemId, ParameterServerOutput}
 import parameter.server.utils.{IDGenerator, Vector}
 

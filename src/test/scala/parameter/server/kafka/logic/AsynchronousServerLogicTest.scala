@@ -1,4 +1,4 @@
-package parameter.server.logic
+package parameter.server.kafka.logic
 
 import org.apache.flink.api.common.functions.FlatMapFunction
 import org.apache.flink.api.common.state.ValueState
@@ -10,7 +10,7 @@ import org.scalatest.Matchers
 import parameter.server.CollectSink
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Message, Pull, PullAnswer}
-import parameter.server.logic.server.AsynchronousServerLogic
+import parameter.server.kafka.logic.server.AsynchronousServerLogic
 import parameter.server.utils.{Types, Vector}
 
 class AsynchronousServerLogicTest extends AbstractTestBase with Matchers {
