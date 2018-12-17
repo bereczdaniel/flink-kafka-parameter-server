@@ -5,37 +5,47 @@ import org.apache.flink.api.common.state.ValueState
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.test.util.AbstractTestBase
 import org.apache.flink.util.Collector
+import scala.util.Random
 import org.junit.Test
-import org.scalatest.Matchers
+import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.prop.PropertyChecks
 import parameter.server.CollectSink
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Message, Pull, PullAnswer}
 import parameter.server.kafka.logic.server.AsynchronousServerLogic
 import parameter.server.utils.{Types, Vector}
 
-class AsynchronousServerLogicTest extends AbstractTestBase with Matchers {
+class AsynchronousServerLogicTest extends FlatSpec with PropertyChecks with Matchers {
 
-  @Test
-  def pullTest(): Unit = {
+  
+    val r = new scala.util.Random
+    val numTest = 10
+
+  def generateInput[A](n: Int, f: Int => A): List[A] = {
+    for{
+      seed <- (0 until n).toList
+    } yield f(seed)
+  }
+
+  "Asynchronous server logic" should " answer to pull requests" in {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     CollectSink.values.clear()
-
-    val data = List(
-      Pull[Int, Int, Vector](1, 1),
-      Pull[Int, Int, Vector](2, 1),
-      Pull[Int, Int, Vector](3, 2),
-      Pull[Int, Int, Vector](4, 2))
+    
+    val data = generateInput(numTest, seed => Pull[Int, Int, Vector](seed, r.nextInt(numTest)))
 
     val ds: DataStream[Message[Int, Int, Vector]] = env
       .fromCollection(data)
 
+    lazy val udf: (Int, Int) => Vector = (x,y) => Vector(Array(x.toDouble, y.toDouble, math.pow(x,y))) 
 
     ds
       .process(new AsynchronousServerLogic[Int, Int, Vector] {
         override val model: ValueState[Vector] = null
 
+        lazy val udf: (Int, Int) => Vector = (x,y) => Vector(Array(x.toDouble, y.toDouble, math.pow(x,y))) 
+
         override def onPullReceive(pull: Pull[Int, Int, Vector], out: Collector[Either[Types.ParameterServerOutput, Message[Int, Int, Vector]]]): Unit = {
-          val payload: Vector = Vector(Array(pull.dest.toDouble, pull.src.toDouble, math.pow(pull.dest, pull.src)))
+          val payload: Vector = udf(pull.dest, pull.src)
           out.collect(Right(PullAnswer(pull.destination, pull.source, payload)))
         }
 
@@ -55,7 +65,9 @@ class AsynchronousServerLogicTest extends AbstractTestBase with Matchers {
     env.execute()
 
 
-    assert(CollectSink.values.toList.sortBy(_.destination) == data.map(x => PullAnswer(x.dest, x.src, Vector(Array(x.dest.toDouble, x.src.toDouble, math.pow(x.dest, x.src))))).sortBy(_.destination))
+    assert(
+      CollectSink.values.toList.sortBy(_.destination) == 
+      data.map(x => PullAnswer(x.dest, x.src, udf(x.dest, x.src))).sortBy(_.destination))
   }
 
 }
