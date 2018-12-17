@@ -39,7 +39,7 @@ object OnlineTrainAndEval {
 
     val ps = new ParameterServer[EvaluationRequest, Vector, Long, Int](
       env,
-      src = source,
+      inputStream = source,
       workerLogic = new TrainAndEvalWorkerLogic(n, learningRate, 9, -0.001, 0.001, 100, 75),
       serverLogic = new TrainAndEvalServerLogic(x => Vector(factorInitDesc.open().nextFactor(x.hashCode())), Vector.vectorSum),
       serverToWorkerParse = pullAnswerFromString, workerToServerParse = workerToServerParse,

@@ -2,6 +2,7 @@ package parameter.server.utils
 
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
+import org.apache.flink.api.common.typeinfo.TypeInformation
 
 object Utils {
 
@@ -12,7 +13,10 @@ object Utils {
     * @tparam B
     * @return DataStream of the left values, DataStream of the right values
     */
-  def splitStream[A,B](ds: DataStream[Either[A,B]]): (DataStream[A], DataStream[B]) =
+  def splitStream[A,B]
+  (ds: DataStream[Either[A,B]])  (implicit 
+  tiA: TypeInformation[A],
+  tiB: TypeInformation[B]) : (DataStream[A], DataStream[B]) = 
     (ds.flatMap[A]((value: Either[A,B], out: Collector[A]) => {
       value match {
         case Left(aa) =>
