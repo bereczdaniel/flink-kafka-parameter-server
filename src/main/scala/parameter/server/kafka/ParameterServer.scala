@@ -56,7 +56,8 @@ class ParameterServer[T <: WorkerInput,
             inputStream, serverToWorker())
       ))
 
-    guideMessages(serverToWorkerStream, workerToServerStream)
+    submitToKafkaTopic(serverToWorkerStream, serverToWorkerTopic)
+    submitToKafkaTopic(workerToServerStream, workerToServerTopic)
     connectOutputStreams(serverOutput,workerOutput)
   }
 
@@ -124,20 +125,10 @@ class ParameterServer[T <: WorkerInput,
     serverInputStream
       .process(serverLogic)
 
-  /**
-    * Send the output messages of each part to the corresponding Kafka topic
-    * @param serverToWorkerStream: server --> worker messages
-    * @param workerToServerStream: worker --> server messages
-    */
-  def guideMessages(serverToWorkerStream: DataStream[Message[SK, WK, P]], workerToServerStream: DataStream[Message[WK, SK, P]]): Unit = {
-    serverToWorkerStream
-      .map(_.toString)
-      .addSink(new FlinkKafkaProducer011[String](host + port, serverToWorkerTopic, new SimpleStringSchema()))
-
-    workerToServerStream
-      .map(_.toString)
-      .addSink(new FlinkKafkaProducer011[String](host + port, workerToServerTopic,  new SimpleStringSchema()))
-  }
+  def submitToKafkaTopic[A](ds: DataStream[A], topic: String): Unit = 
+    ds
+    .map(_.toString)
+    .addSink(new FlinkKafkaProducer011[String](host + port, topic, new SimpleStringSchema()))
 
   /**
     * Connect the events for the outer world from the servers and workers
