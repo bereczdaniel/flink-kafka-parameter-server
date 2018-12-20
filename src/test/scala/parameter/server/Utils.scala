@@ -7,8 +7,18 @@ import parameter.server.utils.Types
 
 import scala.collection.mutable.ArrayBuffer
 
-class Utils {
-
+object Utils {
+  /**
+    * Generate n input with the provided function
+    * @param n: Number of generated instances
+    * @param f: Function to instanstiate input
+    * @return List of inputs
+    */
+  def generateInput[A](n: Int, f: Int => A): List[A] = {
+    for{
+      seed <- (0 until n).toList
+    } yield f(seed)
+  }
 }
 
 // create a testing sink
