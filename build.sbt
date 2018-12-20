@@ -43,13 +43,12 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies ++= flinkDependencies.map(_ % "compile"),
-    //    libraryDependencies ++= flinkDependencies.map(_ % "compile"),
+    libraryDependencies ++= flinkDependencies.map(_ % "provided"),
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= Seq(
       "net.debasishg" %% "redisclient" % "3.8",    // https://github.com/debasishg/scala-redis
       "org.slf4j" % "slf4j-simple" % loggerVersion,
-      "org.clapper" %% "grizzled-slf4j" % "1.0.1"
+      "org.clapper" %% "grizzled-slf4j" % "1.0.2"
     )
   )
 
