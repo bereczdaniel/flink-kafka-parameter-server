@@ -4,12 +4,12 @@ import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
-import parameter.server.kafka.logic.server.SynchronousServerLogic
+import parameter.server.kafka.logic.server.AsynchronousServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
 class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector)
-  extends SynchronousServerLogic[Long, Int, Vector] {
+  extends AsynchronousServerLogic[Long, Int, Vector] {
   override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
     new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
 
