@@ -60,7 +60,7 @@ class OnlineTrainAndEval() extends Serializable {
       .readTextFile("lastFM/sliced/first_10_idx")
       .map(line => {
         val fields = line.split(",")
-        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong)
+        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
       })
 
 
@@ -96,14 +96,14 @@ class OnlineTrainAndEval() extends Serializable {
   private def eval(recommendations: DataStream[Recommendation]): DataStream[Result] =
     recommendations
     .map(rec => {
-      val nDCG = Metrics.ndcg(rec.topK, rec.targetId)
+      val nDCG = Metrics.nDCG(rec.topK, rec.targetId)
       Result(rec.evaluationId, nDCG, rec.timestamp)
     })
 
   private def accumulateResults(results: DataStream[Result], snapshotLength: Long): DataStream[AccumulatedResult] =
     results
       .keyBy(r => r.timestamp / snapshotLength)
-      .window(ProcessingTimeSessionWindows.withGap(Time.seconds(30)))
+      .window(ProcessingTimeSessionWindows.withGap(Time.seconds(60)))
       .process(new ProcessWindowFunction[Result, AccumulatedResult, Long, TimeWindow] {
         override def process(key: Long, context: Context,
                              elements: Iterable[Result],
