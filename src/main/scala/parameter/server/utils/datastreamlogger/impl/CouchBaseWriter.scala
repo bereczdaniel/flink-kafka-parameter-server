@@ -3,7 +3,7 @@ package parameter.server.utils.datastreamlogger.impl
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.{Bucket, Cluster, CouchbaseCluster}
-import parameter.server.utils.datastreamlogger.{DbWriter, LogDataStruct}
+import parameter.server.utils.datastreamlogger.{DataStreamLoggerMap, DbWriter, LogDataConstFields, LogDataStruct}
 import rx.functions.Action1
 
 //class CouchBaseWriter extends DbWriter {
@@ -78,56 +78,14 @@ class CouchBaseWriter(username: String, passworld: String, bucketname: String, n
 }
 
 object CouchBaseWriter {
-
-  var counter: Int = _
-
-//  def main(args: Array[String]): Unit = {
-//      val cluster = CouchbaseCluster.create
-//      cluster.authenticate("admin", "admin123")
-//      val bucket = cluster.openBucket("fmtest")
-//      val user = JsonObject.empty()
-//      .put("run_type", "async")
-//      .put("run_id", "1545318356")
-//      .put("elem_id", 5)
-//      .put("proc_phase", "input")
-//      .put("ts", 3545318366L)
-//      val doc = JsonDocument.create("8", user)
-////      println(bucket.insert(doc))
-////      println(bucket.async.insert(doc))
-//      bucket.async.insert(doc)
-//          .subscribe(new Action1[JsonDocument] {
-//            override def call(t: JsonDocument): Unit = println(t.id())
-//          })
-//
-//    Thread.sleep(10000)
-//
-//
-//      cluster.disconnect
-//  }
-
   def main(args: Array[String]): Unit = {
-      val cluster = CouchbaseCluster.create
-      cluster.authenticate("admin", "admin123")
-      val bucket = cluster.openBucket("asynctest")
-      val user = JsonObject.empty()
-      .put("run_type", "async")
-      .put("run_id", "1545318356")
-      .put("elem_id", 5)
-      .put("proc_phase", "input")
-      .put("ts", 3545318366L)
+    val cw = new CouchBaseWriter("admin", "admin123", "asynctest", "localhost")
+    (0 until 100).map(
+      LogDataStruct.createFromMessage[Long](_, x=>x, DataStreamLoggerMap.getCurrentTimestamp(),
+        new LogDataConstFields("input", 456, "kafka")))
+      .foreach(cw.writeToDb)
 
-     val c =(100 until 200).map(q => JsonDocument.create(q.toString, user))
-
-
-    c.foreach(bucket.async.insert(_)
-        .subscribe(new Action1[JsonDocument] {
-            override def call(t: JsonDocument): Unit = counter += 1
-          }))
-
-    while(counter != c.size) {
-      Thread.sleep(1)
-    }
-      cluster.disconnect
+    cw.close
   }
 
 }
