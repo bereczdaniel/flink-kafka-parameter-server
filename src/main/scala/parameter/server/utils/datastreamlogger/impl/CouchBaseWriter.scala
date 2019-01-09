@@ -53,7 +53,7 @@ class CouchBaseWriter(username: String, passworld: String, bucketname: String, n
   var inputCounter: Int = _
   var writeCounter: Int = _
 
-  def close = {
+   override def close = {
     while(inputCounter > writeCounter) {
       Thread.sleep(1)
     }
@@ -81,7 +81,7 @@ object CouchBaseWriter {
   def main(args: Array[String]): Unit = {
     val cw = new CouchBaseWriter("admin", "admin123", "asynctest", "localhost")
     (0 until 100).map(
-      LogDataStruct.createFromMessage[Long](_, x=>x, DataStreamLoggerMap.getCurrentTimestamp(),
+      LogDataStruct.createFromMessage[Long](_, x=>x, DataStreamLoggerMap.getCurrentTimestamp,
         new LogDataConstFields("input", 456, "kafka")))
       .foreach(cw.writeToDb)
 

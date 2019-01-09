@@ -6,6 +6,8 @@ class ConsoleWriter extends DbWriter {
   override def writeToDb(d: LogDataStruct) = {
     println(d.toString)
   }
+
+  override def close: Unit = {}
 }
 
 /**
@@ -14,7 +16,7 @@ class ConsoleWriter extends DbWriter {
 object ConsoleWriter {
   def main(args: Array[String]): Unit = {
     val cw = new ConsoleWriter()
-    val lds = LogDataStruct.createFromMessage[Long](1, x=>x, DataStreamLoggerMap.getCurrentTimestamp(), new LogDataConstFields("start", 456, "kafka"))
+    val lds = LogDataStruct.createFromMessage[Long](1, x=>x, DataStreamLoggerMap.getCurrentTimestamp, new LogDataConstFields("start", 456, "kafka"))
     cw.writeToDb(lds)
   }
 }

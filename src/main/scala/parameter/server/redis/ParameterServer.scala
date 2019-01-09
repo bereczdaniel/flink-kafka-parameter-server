@@ -4,7 +4,7 @@ import org.apache.flink.streaming.api.functions.source.RichSourceFunction
 import org.apache.flink.streaming.api.scala._
 import parameter.server.communication.Messages.Message
 import parameter.server.redis.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
+import parameter.server.utils.Types.{Parameter, ParameterServerOutput, ParameterServerSkeleton, WorkerInput}
 
 class ParameterServer[T <: WorkerInput,
                       P <: Parameter,
@@ -14,7 +14,7 @@ class ParameterServer[T <: WorkerInput,
                                workerLogic: WorkerLogic[WK, SK, T, P],
                                serverPubSubSource: RichSourceFunction[String],
                                serverToWorkerParse: String => Message[SK, WK, P]
-                             ) {
+                             ) extends ParameterServerSkeleton {
 
   def start(): DataStream[ParameterServerOutput] = {
     init()

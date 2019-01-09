@@ -9,7 +9,7 @@ import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, Flink
 import parameter.server.communication.Messages.Message
 import parameter.server.kafka.logic.server.ServerLogic
 import parameter.server.kafka.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
+import parameter.server.utils.Types.{Parameter, ParameterServerOutput, ParameterServerSkeleton, WorkerInput}
 import parameter.server.utils.Utils
 
 
@@ -39,7 +39,7 @@ class ParameterServer[T <: WorkerInput,
                                workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
                                serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
                                host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
-                               broadcastServerToWorkers: Boolean = false) {
+                               broadcastServerToWorkers: Boolean = false) extends ParameterServerSkeleton {
 
   def start(): DataStream[ParameterServerOutput] = {
     init()

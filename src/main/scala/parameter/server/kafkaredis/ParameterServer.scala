@@ -10,7 +10,7 @@ import org.apache.flink.util.Collector
 import parameter.server.communication.Messages.Message
 import parameter.server.kafkaredis.logic.server.ServerLogic
 import parameter.server.kafkaredis.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
+import parameter.server.utils.Types.{Parameter, ParameterServerOutput, ParameterServerSkeleton, WorkerInput}
 
 class ParameterServer[T <: WorkerInput,
                       P <: Parameter,
@@ -20,7 +20,7 @@ class ParameterServer[T <: WorkerInput,
                                workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
                                serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
                                host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
-                               broadcastServerToWorkers: Boolean = false) {
+                               broadcastServerToWorkers: Boolean = false) extends ParameterServerSkeleton {
 
   def start(): DataStream[ParameterServerOutput] = {
     init()

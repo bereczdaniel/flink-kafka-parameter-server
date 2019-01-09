@@ -1,6 +1,8 @@
 package parameter.server.utils.datastreamlogger
 
-import org.apache.flink.api.common.functions.MapFunction
+import org.apache.flink.api.common.functions.RichMapFunction
+import org.apache.flink.api.java.utils.ParameterTool
+import org.apache.flink.configuration.Configuration
 
 /**
   * The Flink map function that must be called whenever a timestamp log is needed:
@@ -14,18 +16,25 @@ import org.apache.flink.api.common.functions.MapFunction
 class DataStreamLoggerMap[M](
                               dbWriter: DbWriter,
                               getIdFromMessage: M => Long,
-                              logDataConstFields: LogDataConstFields
-  )
-  extends MapFunction[M, M] {
+                              processStage: String,
+                              testProcessCategory: String)
+  extends RichMapFunction[M, M] {
 
-    override def map(msg: M) = {
-      dbWriter.writeToDb(LogDataStruct.createFromMessage(msg, getIdFromMessage, DataStreamLoggerMap.getCurrentTimestamp(), logDataConstFields))
-      msg
-    }
+  var logConst: LogDataConstFields = _
+
+  override def open(parameters: Configuration): Unit =
+    logConst = new LogDataConstFields(processStage, getRuntimeContext.getExecutionConfig.getGlobalJobParameters.asInstanceOf[ParameterTool].getLong("testProcessId"), testProcessCategory)
+
+  override def map(msg: M) = {
+    dbWriter.writeToDb(LogDataStruct.createFromMessage(msg, getIdFromMessage, DataStreamLoggerMap.getCurrentTimestamp, logConst))
+    msg
+  }
+
+  override def close(): Unit = dbWriter.close
 }
 
 object DataStreamLoggerMap {
-  def getCurrentTimestamp(): Long = {
+  def getCurrentTimestamp: Long = {
     System.nanoTime() / 1000000 // millisec? - thr precision may be modified
   }
 }

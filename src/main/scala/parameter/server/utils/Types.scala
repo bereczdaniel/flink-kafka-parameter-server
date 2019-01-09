@@ -1,8 +1,14 @@
 package parameter.server.utils
 
+import org.apache.flink.streaming.api.scala.DataStream
+
 import scala.collection.mutable
 
 object Types {
+
+  trait ParameterServerSkeleton {
+    def start(): DataStream[ParameterServerOutput]
+  }
 
   // Represents an arbitrary element of a machine learning model (e.g. weight of feature)
   trait Parameter
