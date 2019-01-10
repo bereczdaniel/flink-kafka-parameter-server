@@ -10,7 +10,7 @@ import org.apache.flink.streaming.api.scala._
 
 object LogFrame {
 
-  def addLogFrame(inputStream: DataStream[EvaluationRequest], inputToPS: DataStream[EvaluationRequest] => ParameterServerSkeleton,
+  def addLogFrameAndRunPS(inputStream: DataStream[EvaluationRequest], inputToPS: DataStream[EvaluationRequest] => ParameterServerSkeleton,
                   dbw: DbWriter, env: StreamExecutionEnvironment, testProcessCategory: String): DataStream[EvaluationOutput] = {
     import scala.collection.JavaConverters._
     env.getConfig.setGlobalJobParameters(ParameterTool.fromMap(Map("testProcessId" -> DataStreamLoggerMap.getCurrentTimestamp.toString).asJava))

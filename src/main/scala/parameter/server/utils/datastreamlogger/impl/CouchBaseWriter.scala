@@ -2,7 +2,8 @@ package parameter.server.utils.datastreamlogger.impl
 
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
-import com.couchbase.client.java.{Bucket, Cluster, CouchbaseCluster}
+import com.couchbase.client.java.{Bucket, CouchbaseCluster}
+import org.apache.flink.api.java.utils.ParameterTool
 import parameter.server.utils.datastreamlogger.{DataStreamLoggerMap, DbWriter, LogDataConstFields, LogDataStruct}
 import rx.functions.Action1
 
@@ -46,8 +47,7 @@ import rx.functions.Action1
 
 
 class CouchBaseWriter(username: String, passworld: String, bucketname: String, nodes: String*) extends DbWriter {
-  //TODO: nodes:* ???
-  val cluster: CouchbaseCluster = CouchbaseCluster.create
+  val cluster: CouchbaseCluster = CouchbaseCluster.create(nodes: _*)
   cluster.authenticate(username, passworld)
   val bucket: Bucket = cluster.openBucket(bucketname)
   var inputCounter: Int = _
@@ -78,6 +78,15 @@ class CouchBaseWriter(username: String, passworld: String, bucketname: String, n
 }
 
 object CouchBaseWriter {
+
+  def getFromParameters(parameters: ParameterTool) = {
+    val username = parameters.get("couchbase_username", "admin")
+    val passworld = parameters.get("couchbase_passworld", "admin123")
+    val bucketname = parameters.get("couchbase_bucketname", "asynctest")
+    val nodes = parameters.get("couchbase_nodes", "localhost").split(",")
+    new CouchBaseWriter(username, passworld, bucketname, nodes:_*)
+  }
+
   def main(args: Array[String]): Unit = {
     val cw = new CouchBaseWriter("admin", "admin123", "asynctest", "localhost")
     (0 until 100).map(
