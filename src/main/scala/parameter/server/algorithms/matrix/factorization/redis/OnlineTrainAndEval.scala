@@ -75,7 +75,7 @@ object OnlineTrainAndEval {
               val topK = allTopK.map(_.topK).fold(List[(ItemId, Double)]())((a, b) => a ++ b).distinct.sortBy(-_._2).map(_._1).take(K)
               val targetItemId = allTopK.maxBy(_.itemId).itemId
               val ts = allTopK.maxBy(_.ts).ts
-              val nDCG = Metrics.ndcg(topK, targetItemId)
+              val nDCG = Metrics.nDCG(topK, targetItemId)
               (List((localTopK.evaluationId, nDCG, ts)), None)
             }
         }

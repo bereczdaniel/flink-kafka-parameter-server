@@ -11,10 +11,10 @@ import org.apache.flink.util.Collector
 import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
-import parameter.server.algorithms.matrix.factorization.kafka.OnlineTrainAndEval.{AccumulatedResult, Result}
+import parameter.server.algorithms.matrix.factorization.kafka.OnlineTrainAndEval.{AccumulatedResult, Recommendation, Result}
 import parameter.server.communication.Messages._
 import parameter.server.kafka.ParameterServer
-import parameter.server.utils.Types.ParameterServerOutput
+import parameter.server.utils.Types.{ItemId, ParameterServerOutput}
 import parameter.server.utils.{Utils, Vector}
 
 class OnlineTrainAndEval() extends Serializable {
@@ -44,9 +44,11 @@ class OnlineTrainAndEval() extends Serializable {
 
     val psOutput = runPS(ps)
 
-    val mergedRecommendations = mergeAndEval(psOutput, K, parallelism)
+    val mergedRecommendations = merge(psOutput, K, parallelism)
 
-    val accumulatedResults = accumulateResults(mergedRecommendations, snapshotLength)
+    val results = eval(mergedRecommendations)
+
+    val accumulatedResults = accumulateResults(results, snapshotLength)
 
     saveToFile(accumulatedResults, outputFile)
 
@@ -55,11 +57,12 @@ class OnlineTrainAndEval() extends Serializable {
 
   private def createInput(env: StreamExecutionEnvironment, fileName: String): DataStream[EvaluationRequest] =
     env
-    .readTextFile(fileName)
-    .map(line => {
-      val fields = line.split(",")
-      EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong)
-    })
+      .readTextFile("lastFM/sliced/first_10_idx")
+      .map(line => {
+        val fields = line.split(",")
+        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
+      })
+
 
   private def runPS(ps: ParameterServer[EvaluationRequest, Vector, Long, Int]): DataStream[EvaluationOutput] =
     ps
@@ -73,25 +76,34 @@ class OnlineTrainAndEval() extends Serializable {
       }
     })
 
-  private def mergeAndEval(psOut: DataStream[EvaluationOutput], K: Int, parallelism: Int): DataStream[Result] =
+  private def merge(psOut: DataStream[EvaluationOutput], K: Int, parallelism: Int): DataStream[Recommendation] =
     psOut
-      .keyBy(_.evaluationId)
-      .countWindow(parallelism)
-      .process(new ProcessWindowFunction[EvaluationOutput, Result, Long, GlobalWindow] {
-        override def process(key: Long, context: Context,
-                             elements: Iterable[EvaluationOutput],
-                             out: Collector[Result]): Unit = {
-          val finalTopK = elements.flatMap(_.topK).toList.sortBy(_._2).takeRight(K).map(_._1)
-          val nDCG = Metrics.ndcg(finalTopK, elements.head.itemId)
+    .keyBy(_.evaluationId)
+    .countWindow(parallelism)
+    .process(new ProcessWindowFunction[EvaluationOutput, Recommendation, Long, GlobalWindow] {
+      override def process(key: Long, context: Context,
+                           elements: Iterable[EvaluationOutput],
+                           out: Collector[Recommendation]): Unit = {
 
-          out.collect(Result(key, nDCG, elements.head.ts))
-        }
-      })
+        val target = elements.map(_.itemId).max
+        val topK = elements.flatMap(_.topK).toList.sortBy(_._2).distinct.takeRight(K).map(_._1)
+        val id = elements.head.evaluationId
+        val ts = elements.map(_.ts).max
+        out.collect(Recommendation(target, topK, id, ts))
+      }
+    })
+
+  private def eval(recommendations: DataStream[Recommendation]): DataStream[Result] =
+    recommendations
+    .map(rec => {
+      val nDCG = Metrics.nDCG(rec.topK, rec.targetId)
+      Result(rec.evaluationId, nDCG, rec.timestamp)
+    })
 
   private def accumulateResults(results: DataStream[Result], snapshotLength: Long): DataStream[AccumulatedResult] =
     results
       .keyBy(r => r.timestamp / snapshotLength)
-      .window(ProcessingTimeSessionWindows.withGap(Time.seconds(10)))
+      .window(ProcessingTimeSessionWindows.withGap(Time.seconds(60)))
       .process(new ProcessWindowFunction[Result, AccumulatedResult, Long, TimeWindow] {
         override def process(key: Long, context: Context,
                              elements: Iterable[Result],
@@ -132,6 +144,7 @@ class OnlineTrainAndEval() extends Serializable {
 
 object OnlineTrainAndEval {
 
+  case class Recommendation(targetId: ItemId, topK: List[ItemId], evaluationId: Long, timestamp: Long)
   case class Result(evaluationId: Long, nDCG: Double, timestamp: Long)
   case class AccumulatedResult(nDCG: Double, timeSlot: Long, count: Int) {
     override def toString: String =
