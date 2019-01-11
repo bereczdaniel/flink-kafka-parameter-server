@@ -1,6 +1,5 @@
 package parameter.server.algorithms.matrix.factorization
 
-import org.apache.flink.api.common.functions.FlatMapFunction
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.core.fs.FileSystem
 import org.apache.flink.streaming.api.scala._
@@ -12,31 +11,40 @@ import org.apache.flink.util.Collector
 import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
-import parameter.server.algorithms.matrix.factorization.kafka.OnlineTrainAndEval.{AccumulatedResult, Recommendation, Result}
 import parameter.server.communication.Messages._
-import parameter.server.utils.Types.{ParameterServerOutput, ParameterServerSkeleton}
+import parameter.server.utils.Types.{ParameterServerSkeleton, Recommendation}
 import parameter.server.utils.{Utils, Vector}
-import parameter.server.utils.datastreamlogger.LogFrame
+import parameter.server.utils.datastreamlogger.{DbWriter, LogFrame}
 import parameter.server.utils.datastreamlogger.impl.{ConsoleWriter, CouchBaseWriter}
 
 abstract class AbstractOnlineTrainAndEval extends Serializable {
+
+  case class Result(evaluationId: Long, nDCG: Double, timestamp: Long)
+  case class AccumulatedResult(nDCG: Double, timeSlot: Long, count: Int) {
+    override def toString: String =
+      s"$timeSlot,$nDCG,$count"
+  }
+
 
   // abstract function
   // the type of the test process run (e.g. kafka/redis/...)
   def testProcessCategory: String
   // the recipe of the given implementation of the PS
-  def createPS(parameters: ParameterTool)(inputStream: DataStream[EvaluationRequest]): ParameterServerSkeleton
+  def createPS(learningRate: Double, numFactors: Int, negativeSampleRate: Int, rangeMin: Double, rangeMax: Double,
+               workerK: Int, bucketSize: Int,
+               parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
+               inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton
 
   /** Get the logging backenbd db
     *
-    * @param dbBackend
-    * @param parameters
     * @return
     */
-  def getDBWriter(dbBackend: Option[String] = None, parameters: ParameterTool) = dbBackend match {
+  def getDBWriter(dbBackend: Option[String] = None, parameters: ParameterTool): DbWriter = dbBackend match {
     case Some(db) if db != "couchbase"  =>  db match  {
       case "console" => new ConsoleWriter()
-      case "postgresql" => throw new UnsupportedOperationException
+      case "postgresql" =>
+        // TODO
+        throw new UnsupportedOperationException
       case _ => throw new UnsupportedOperationException
     }
     case _ => CouchBaseWriter.getFromParameters(parameters)
@@ -44,54 +52,35 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
 
   /** Run PS with CLI argument
     *
-    * @param args
     */
-  def parameterParseAndRun(args: Array[String]): Unit = {
-    val params = Utils.getParameters(args)
+  def parameterParseAndRun(args: Array[String]): Unit =
+    Utils.getParameters(args) match {
+      case Some(parameters) =>
+        val learningRate = parameters.getDouble("learningRate")
+        val negativeSampleRate = parameters.getInt("negativeSampleRate")
+        val numFactors = parameters.getInt("numFactors")
+        val rangeMin = parameters.getDouble("rangeMin")
+        val rangeMax = parameters.getDouble("rangeMax")
+        val K = parameters.getInt("K")
+        val workerK = parameters.getInt("workerK")
+        val bucketSize = parameters.getInt("bucketSize")
+        val parallelism = parameters.getInt("parallelism")
 
-    for (
-      pt <- params
-    ) {
-      val learningRate = pt.getDouble("learningRate")
-      val negativeSampleRate = pt.getInt("negativeSampleRate")
-      val numFactors = pt.getInt("numFactors")
-      val rangeMin = pt.getDouble("rangeMin")
-      val rangeMax = pt.getDouble("rangeMax")
-      val K = pt.getInt("K")
-      val workerK = pt.getInt("workerK")
-      val bucketSize = pt.getInt("bucketSize")
-      val parallelism = pt.getInt("parallelism")
+        val inputFile = parameters.get("inputFile")
+        val outputFile = parameters.get("outputFile")
+        val snapshotLength = parameters.getInt("snapshotLength", 86400)
 
-      val inputFile = pt.get("inputFile")
-      val outputFile = pt.get("outputFile")
-      val snapshotLength = pt.getInt("snapshotLength")
+        val measureFrame = Option(parameters.getBoolean("measureFrame"))
+        val dbBackend = Option(parameters.get("dbBackend"))
+        val evalAndWrite = parameters.getBoolean("evalAndWrite", true)
 
-      val measureFrame = Option(pt.getBoolean("measureFrame"))
-      val dbBackend = Option(pt.get("dbBackend"))
-
-      run(K, snapshotLength, learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax, inputFile,
-        workerK, bucketSize, outputFile, measureFrame, dbBackend, parallelism, params)
-      )
+        run(K, snapshotLength, learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax, inputFile,
+          workerK, bucketSize, outputFile, measureFrame, dbBackend, evalAndWrite, parallelism, parameters)
+      case None =>
     }
-  }
 
   /** Run PS
     *
-    * @param K
-    * @param snapshotLength
-    * @param learningRate
-    * @param numFactors
-    * @param negativeSampleRate
-    * @param rangeMin
-    * @param rangeMax
-    * @param inputFile
-    * @param workerK
-    * @param bucketSize
-    * @param outputFile
-    * @param measureFrame
-    * @param dbBackend
-    * @param parallelism
-    * @param parameters
     */
   def run(K: Int, snapshotLength: Int,
           learningRate: Double, numFactors: Int, negativeSampleRate: Int, rangeMin: Double, rangeMax: Double,
@@ -100,7 +89,9 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
           outputFile: String,
           measureFrame: Option[Boolean] = Some(true),
           dbBackend: Option[String],
-          parallelism: Int, parameters: ParameterTool): Unit = {
+          evalAndWrite: Boolean,
+          parallelism: Int,
+          parameters: ParameterTool): Unit = {
 
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(parallelism)
@@ -108,18 +99,22 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
     lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
 
     val psOutput =  if (measureFrame.isEmpty || measureFrame.get) {
-      LogFrame.addLogFrameAndRunPS(createInput(env, inputFile), createPS(parameters), getDBWriter(dbBackend, parameters), env, testProcessCategory)
+      LogFrame.addLogFrameAndRunPS(createInput(env, inputFile),
+        getDBWriter(dbBackend, parameters), env, testProcessCategory,
+        (input, env) => runPS(createPS(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax,
+          workerK, bucketSize, parameters, factorInitDesc, input, env), K ,parallelism)
+
+      )
     } else {
-      runPS(createPS(parameters)(createInput(env, inputFile)))
+      runPS(createPS(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax,
+        workerK, bucketSize, parameters, factorInitDesc, createInput(env, inputFile), env), K, parallelism)
     }
 
-    val mergedRecommendations = merge(psOutput, K, parallelism)
-
-    val results = eval(mergedRecommendations)
-
-    val accumulatedResults = accumulateResults(results, snapshotLength)
-
-    saveToFile(accumulatedResults, outputFile)
+    if(evalAndWrite) {
+      val results = eval(psOutput)
+      val accumulatedResults = accumulateResults(results, snapshotLength)
+      saveToFile(accumulatedResults, outputFile)
+    }
 
     env.execute()
   }
@@ -133,17 +128,13 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
       })
 
 
-  private def runPS(ps: ParameterServerSkeleton): DataStream[EvaluationOutput] =
-    ps
+  private def runPS(ps: ParameterServerSkeleton, K: Int, parallelism: Int): DataStream[Recommendation] =
+    merge(ps
     .start()
-    .flatMap(new FlatMapFunction[ParameterServerOutput, EvaluationOutput] {
-      override def flatMap(value: ParameterServerOutput, out: Collector[EvaluationOutput]): Unit = {
-        value match {
-          case eval: EvaluationOutput => out.collect(eval)
-          case _ => throw new NotSupportedOutput
-        }
-      }
-    })
+    .flatMap(_ match {
+      case eval: EvaluationOutput => Some(eval)
+      case _ => throw new NotSupportedOutput
+    }), K: Int, parallelism: Int)
 
   private def merge(psOut: DataStream[EvaluationOutput], K: Int, parallelism: Int): DataStream[Recommendation] =
     psOut
@@ -195,10 +186,9 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
 
   /** Util function to kafka communication
     *
-    * @param line
     * @return
     */
-  private def workerToServerParse(line: String): Message[Long, Int, Vector] = {
+  protected def workerToServerParse(line: String): Message[Long, Int, Vector] = {
     val fields = line.split(":")
 
     fields.head match {
@@ -212,10 +202,9 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
 
   /** Util function to create PS
     *
-    * @param line
     * @return
     */
-  private def pullAnswerFromString(line: String): PullAnswer[Long, Int, Vector] = {
+  protected def pullAnswerFromString(line: String): PullAnswer[Long, Int, Vector] = {
     val fields = line.split(":")
     PullAnswer(fields(0).toInt, fields(1).toLong, Vector(fields(2).split(",").map(_.toDouble)))
   }

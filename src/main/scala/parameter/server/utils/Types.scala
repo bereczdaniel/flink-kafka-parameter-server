@@ -10,6 +10,8 @@ object Types {
     def start(): DataStream[ParameterServerOutput]
   }
 
+  case class Recommendation(targetId: ItemId, topK: List[ItemId], evaluationId: Long, timestamp: Long)
+
   // Represents an arbitrary element of a machine learning model (e.g. weight of feature)
   trait Parameter
 
