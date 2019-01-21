@@ -46,9 +46,9 @@ import rx.functions.Action1
 //}
 
 
-class CouchBaseWriter(username: String, passworld: String, bucketname: String, nodes: String*) extends DbWriter {
+class CouchBaseWriter(username: String, password: String, bucketname: String, nodes: String*) extends DbWriter {
   val cluster: CouchbaseCluster = CouchbaseCluster.create(nodes: _*)
-  cluster.authenticate(username, passworld)
+  cluster.authenticate(username, password)
   val bucket: Bucket = cluster.openBucket(bucketname)
   var inputCounter: Int = _
   var writeCounter: Int = _
