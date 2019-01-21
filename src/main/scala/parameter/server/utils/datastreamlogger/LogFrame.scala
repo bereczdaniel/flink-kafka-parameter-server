@@ -15,7 +15,6 @@ object LogFrame {
                          ): DataStream[Recommendation] = {
     import scala.collection.JavaConverters._
     env.getConfig.setGlobalJobParameters(ParameterTool.fromMap(Map("testProcessId" -> DataStreamLoggerMap.getCurrentTimestamp.toString).asJava))
-    // TODO: evaluationId is ok for observationId?
     runPS(inputStream.map(new DataStreamLoggerMap[EvaluationRequest](dbw, _.evaluationId, "input", testProcessCategory)), env)
       .map(new DataStreamLoggerMap[Recommendation](dbw, _.evaluationId, "output", testProcessCategory))
   }

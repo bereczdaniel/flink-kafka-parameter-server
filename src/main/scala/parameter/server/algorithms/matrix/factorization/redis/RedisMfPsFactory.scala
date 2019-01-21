@@ -3,38 +3,33 @@ package parameter.server.algorithms.matrix.factorization.redis
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala._
 import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
-import parameter.server.algorithms.matrix.factorization.AbstractOnlineTrainAndEval
-import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationRequest}
+import parameter.server.algorithms.matrix.factorization.{GeneralMfProperties, MfPsFactory}
+import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
 import parameter.server.redis.ParameterServer
-import parameter.server.utils.{RedisPubSubSource, Types, Vector}
+import parameter.server.utils.Types.ParameterServerSkeleton
+import parameter.server.utils.{RedisPubSubSource, Vector}
 
 
-class OnlineTrainAndEval extends AbstractOnlineTrainAndEval {
+class RedisMfPsFactory extends MfPsFactory {
 
-  override def testProcessCategory: String = "kafka"
-
-  override def createPS(learningRate: Double, numFactors: Int, negativeSampleRate: Int, rangeMin: Double, rangeMax: Double,
-                        workerK: Int, bucketSize: Int,
+  override def createPs(generalMfProperties: GeneralMfProperties,
                         parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
-                        inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): Types.ParameterServerSkeleton = {
-    val hostName = parameters.get("host")
-    val port = parameters.get("port").toInt
-    val channelName = parameters.get("channelName")
+                        inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton = {
+    val hostName = parameters.get("redis.host")
+    val port = parameters.get("redis.port").toInt
+    val channelName = parameters.get("redis.channelName")
 
     new ParameterServer[EvaluationRequest, Vector, Long, Int](
       env,
       src = inputStream,
-      workerLogic = new TrainAndEvalWorkerLogic(numFactors, learningRate, negativeSampleRate, rangeMin, rangeMax, workerK,
-        bucketSize, host = hostName, port = port, channelName = channelName),
+      workerLogic = new TrainAndEvalWorkerLogic(generalMfProperties.numFactors, generalMfProperties.learningRate,
+        generalMfProperties.negativeSampleRate, generalMfProperties.rangeMin, generalMfProperties.rangeMax, generalMfProperties.workerK,
+        generalMfProperties.bucketSize, host = hostName, port = port, channelName = channelName),
       serverPubSubSource = new RedisPubSubSource(hostName, port, channelName),
-      serverToWorkerParse = pullAnswerFromString
+      serverToWorkerParse = ParameterServerSkeleton.pullAnswerFromString
     )
   }
 
-}
-
-object OnlineTrainAndEval {
-  def main(args: Array[String]): Unit = (new OnlineTrainAndEval).parameterParseAndRun(args)
 }
 
 

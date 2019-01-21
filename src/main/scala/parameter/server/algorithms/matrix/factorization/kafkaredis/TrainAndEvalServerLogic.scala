@@ -9,12 +9,13 @@ import parameter.server.kafkaredis.logic.server.SynchronousServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
-class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector)  extends SynchronousServerLogic[Long, Int, Vector] {
+class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,
+                              redisHost: String, redisPort: Int)  extends SynchronousServerLogic[Long, Int, Vector] {
   // WARNING !! NOT USED: - only kept because class must implement as abstract field/method - can be deleted...
   override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
     new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
 
-  @transient lazy val r = new RedisClient("localhost", 6379)
+  @transient lazy val r = new RedisClient(redisHost, redisPort)
 
   @transient lazy val init: Int => Vector = _init
   @transient lazy val update: (Vector, Vector) => Vector = _update
@@ -66,5 +67,7 @@ class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) =>
 }
 
 object TrainAndEvalServerLogic {
-  def apply(_init: ItemId => Vector, _update: (Vector, Vector) => Vector): TrainAndEvalServerLogic = new TrainAndEvalServerLogic(_init, _update)
+  def apply(_init: ItemId => Vector, _update: (Vector, Vector) => Vector,
+            redisHost: String, redisPort: Int): TrainAndEvalServerLogic =
+    new TrainAndEvalServerLogic(_init, _update, redisHost, redisPort)
 }

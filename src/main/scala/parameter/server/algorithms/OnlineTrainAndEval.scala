@@ -1,4 +1,4 @@
-package parameter.server.algorithms.matrix.factorization
+package parameter.server.algorithms
 
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.core.fs.FileSystem
@@ -8,16 +8,14 @@ import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionW
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.{GlobalWindow, TimeWindow}
 import org.apache.flink.util.Collector
-import parameter.server.algorithms.Metrics
-import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
+import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
 import parameter.server.utils.Types.{ParameterServerSkeleton, Recommendation}
-import parameter.server.utils.{Utils, Vector}
-import parameter.server.utils.datastreamlogger.{DbWriter, LogFrame}
-import parameter.server.utils.datastreamlogger.impl.{ConsoleWriter, CouchBaseWriter}
+import parameter.server.utils.datastreamlogger.{DbWriterFactory, LogFrame}
+import parameter.server.utils.Utils
 
-abstract class AbstractOnlineTrainAndEval extends Serializable {
+class OnlineTrainAndEval extends Serializable {
 
   case class Result(evaluationId: Long, nDCG: Double, timestamp: Long)
   case class AccumulatedResult(nDCG: Double, timeSlot: Long, count: Int) {
@@ -26,29 +24,15 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
   }
 
 
-  // abstract function
-  // the type of the test process run (e.g. kafka/redis/...)
-  def testProcessCategory: String
-  // the recipe of the given implementation of the PS
-  def createPS(learningRate: Double, numFactors: Int, negativeSampleRate: Int, rangeMin: Double, rangeMax: Double,
-               workerK: Int, bucketSize: Int,
-               parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
-               inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton
 
-  /** Get the logging backenbd db
-    *
-    * @return
-    */
-  def getDBWriter(dbBackend: Option[String] = None, parameters: ParameterTool): DbWriter = dbBackend match {
-    case Some(db) if db != "couchbase"  =>  db match  {
-      case "console" => new ConsoleWriter()
-      case "postgresql" =>
-        // TODO
-        throw new UnsupportedOperationException
-      case _ => throw new UnsupportedOperationException
-    }
-    case _ => CouchBaseWriter.getFromParameters(parameters)
-  }
+ def createPs(algorithm:String, psImplType: String,
+              parameters: ParameterTool,
+              inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton = algorithm match {
+   case "matrixFactorization" => MfPsFactory.createPs(psImplType, parameters, inputStream, env)
+   case _ => throw new UnsupportedOperationException
+ }
+
+
 
   /** Run PS with CLI argument
     *
@@ -56,61 +40,54 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
   def parameterParseAndRun(args: Array[String]): Unit =
     Utils.getParameters(args) match {
       case Some(parameters) =>
-        val learningRate = parameters.getDouble("learningRate")
-        val negativeSampleRate = parameters.getInt("negativeSampleRate")
-        val numFactors = parameters.getInt("numFactors")
-        val rangeMin = parameters.getDouble("rangeMin")
-        val rangeMax = parameters.getDouble("rangeMax")
-        val K = parameters.getInt("K")
-        val workerK = parameters.getInt("workerK")
-        val bucketSize = parameters.getInt("bucketSize")
         val parallelism = parameters.getInt("parallelism")
 
         val inputFile = parameters.get("inputFile")
         val outputFile = parameters.get("outputFile")
+        // period of final NDCG evaluation
         val snapshotLength = parameters.getInt("snapshotLength", 86400)
 
-        val measureFrame = Option(parameters.getBoolean("measureFrame"))
-        val dbBackend = Option(parameters.get("dbBackend"))
-        val evalAndWrite = parameters.getBoolean("evalAndWrite", true)
+        val withMeasureFrame = parameters.getBoolean("withMeasureFrame", false)
+        val dbBackend = parameters.get("dbBackend", "couchbase")
+        // kafka / redis / kafkaredis
+        val psImplType = parameters.get("psImplType")
+        val algorithm = parameters.get("algorithm", "matrixFactorization")
+        val K = parameters.getInt("K")
+        val doEvalAndWrite = parameters.getBoolean("doEvalAndWrite", true)
 
-        run(K, snapshotLength, learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax, inputFile,
-          workerK, bucketSize, outputFile, measureFrame, dbBackend, evalAndWrite, parallelism, parameters)
+        run(algorithm, psImplType, parallelism, inputFile, outputFile, snapshotLength, doEvalAndWrite, withMeasureFrame, dbBackend, K, parameters)
       case None =>
     }
 
   /** Run PS
     *
     */
-  def run(K: Int, snapshotLength: Int,
-          learningRate: Double, numFactors: Int, negativeSampleRate: Int, rangeMin: Double, rangeMax: Double,
-          inputFile: String,
-          workerK: Int, bucketSize: Int,
-          outputFile: String,
-          measureFrame: Option[Boolean] = Some(true),
-          dbBackend: Option[String],
-          evalAndWrite: Boolean,
+  def run(algorithm: String,
+          psImplType: String,
           parallelism: Int,
+          inputFile: String,
+          outputFile: String,
+          snapshotLength: Int,
+          doEvalAndWrite: Boolean,
+          withMeasureFrame: Boolean,
+          dbBackend: String,
+          K: Int,
           parameters: ParameterTool): Unit = {
 
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(parallelism)
 
-    lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
-
-    val psOutput =  if (measureFrame.isEmpty || measureFrame.get) {
+    val psOutput =  if (withMeasureFrame) {
       LogFrame.addLogFrameAndRunPS(createInput(env, inputFile),
-        getDBWriter(dbBackend, parameters), env, testProcessCategory,
-        (input, env) => runPS(createPS(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax,
-          workerK, bucketSize, parameters, factorInitDesc, input, env), K ,parallelism)
+        DbWriterFactory.createDbWriter(dbBackend, parameters), env, psImplType,
+        (input, env) => runPS(createPs(algorithm, psImplType, parameters, input, env), K ,parallelism)
 
       )
     } else {
-      runPS(createPS(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax,
-        workerK, bucketSize, parameters, factorInitDesc, createInput(env, inputFile), env), K, parallelism)
+      runPS(createPs(algorithm, psImplType, parameters, createInput(env, inputFile), env), K, parallelism)
     }
 
-    if(evalAndWrite) {
+    if(doEvalAndWrite) {
       val results = eval(psOutput)
       val accumulatedResults = accumulateResults(results, snapshotLength)
       saveToFile(accumulatedResults, outputFile)
@@ -184,30 +161,6 @@ abstract class AbstractOnlineTrainAndEval extends Serializable {
       .writeAsText(outputFile, FileSystem.WriteMode.OVERWRITE).setParallelism(1)
   }
 
-  /** Util function to kafka communication
-    *
-    * @return
-    */
-  protected def workerToServerParse(line: String): Message[Long, Int, Vector] = {
-    val fields = line.split(":")
-
-    fields.head match {
-      case "Pull" => Pull(fields(1).toLong, fields(2).toInt)
-      case "Push" => Push(fields(1).toLong, fields(2).toInt, Vector(fields(3).split(",").map(_.toDouble)))
-      case _ =>
-        throw new NotSupportedMessage
-        null
-    }
-  }
-
-  /** Util function to create PS
-    *
-    * @return
-    */
-  protected def pullAnswerFromString(line: String): PullAnswer[Long, Int, Vector] = {
-    val fields = line.split(":")
-    PullAnswer(fields(0).toInt, fields(1).toLong, Vector(fields(2).split(",").map(_.toDouble)))
-  }
 }
 
 

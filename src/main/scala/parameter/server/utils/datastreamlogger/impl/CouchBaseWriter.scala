@@ -53,7 +53,7 @@ class CouchBaseWriter(username: String, password: String, bucketname: String, no
   var inputCounter: Int = _
   var writeCounter: Int = _
 
-   override def close = {
+   override def close: Unit = {
     while(inputCounter > writeCounter) {
       Thread.sleep(1)
     }
@@ -79,11 +79,11 @@ class CouchBaseWriter(username: String, password: String, bucketname: String, no
 
 object CouchBaseWriter {
 
-  def getFromParameters(parameters: ParameterTool) = {
-    val username = parameters.get("couchbase_username", "admin")
-    val passworld = parameters.get("couchbase_passworld", "admin123")
-    val bucketname = parameters.get("couchbase_bucketname", "asynctest")
-    val nodes = parameters.get("couchbase_nodes", "localhost").split(",")
+  def createFromParameters(parameters: ParameterTool): CouchBaseWriter = {
+    val username = parameters.get("couchbase.username", "admin")
+    val passworld = parameters.get("couchbase.password", "admin123")
+    val bucketname = parameters.get("couchbase.bucketname", "asynctest")
+    val nodes = parameters.get("couchbase.nodes", "localhost").split(",")
     new CouchBaseWriter(username, passworld, bucketname, nodes:_*)
   }
 
@@ -91,7 +91,7 @@ object CouchBaseWriter {
     val cw = new CouchBaseWriter("admin", "admin123", "asynctest", "localhost")
     (0 until 100).map(
       LogDataStruct.createFromMessage[Long](_, x=>x, DataStreamLoggerMap.getCurrentTimestamp,
-        new LogDataConstFields("input", 456, "kafka")))
+        LogDataConstFields("input", 456, "kafka")))
       .foreach(cw.writeToDb)
 
     cw.close
