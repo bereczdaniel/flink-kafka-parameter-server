@@ -1,7 +1,7 @@
 package parameter.server.kafka
 
-import org.apache.flink.streaming.api.functions.sink.RichSinkFunction
-import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction
+import org.apache.flink.streaming.api.functions.sink.SinkFunction
+import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
 import parameter.server.ParameterServerSkeleton
 import parameter.server.communication.Messages.Message
@@ -32,8 +32,8 @@ class ParameterServer[T <: WorkerInput,
                                inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
                                serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
-                               serverToWorkerSink: RichSinkFunction[String], serverToWorkerSource: RichParallelSourceFunction[String],
-                               workerToServerSink: RichSinkFunction[String], workerToServerSource: RichParallelSourceFunction[String],
+                               serverToWorkerSink: SinkFunction[String], serverToWorkerSource: SourceFunction[String],
+                               workerToServerSink: SinkFunction[String], workerToServerSource: SourceFunction[String],
                                broadcastServerToWorkers: Boolean = false) extends ParameterServerSkeleton {
 
   def start(): DataStream[ParameterServerOutput] = {

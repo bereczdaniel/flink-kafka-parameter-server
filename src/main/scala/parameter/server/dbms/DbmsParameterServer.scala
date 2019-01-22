@@ -1,6 +1,6 @@
 package parameter.server.dbms
 
-import org.apache.flink.streaming.api.functions.source.RichSourceFunction
+import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
 import parameter.server.ParameterServerSkeleton
 import parameter.server.communication.Messages.Message
@@ -13,7 +13,7 @@ class DbmsParameterServer[T <: WorkerInput,
                                env: StreamExecutionEnvironment,
                                inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P],
-                               serverToWorkerSource: RichSourceFunction[String],
+                               serverToWorkerSource: SourceFunction[String],
                                serverToWorkerParse: String => Message[SK, WK, P]
                              ) extends ParameterServerSkeleton {
 
