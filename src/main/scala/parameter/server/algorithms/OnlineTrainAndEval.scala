@@ -8,10 +8,11 @@ import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionW
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.{GlobalWindow, TimeWindow}
 import org.apache.flink.util.Collector
+import parameter.server.ParameterServerSkeleton
 import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
-import parameter.server.utils.Types.{ParameterServerSkeleton, Recommendation}
+import parameter.server.utils.Types.Recommendation
 import parameter.server.utils.datastreamlogger.{DbWriterFactory, LogFrame}
 import parameter.server.utils.Utils
 
@@ -49,7 +50,7 @@ class OnlineTrainAndEval extends Serializable {
 
         val withMeasureFrame = parameters.getBoolean("withMeasureFrame", false)
         val dbBackend = parameters.get("dbBackend", "couchbase")
-        // kafka / redis / kafkaredis
+        // kafka / dbms / kafkaredis
         val psImplType = parameters.get("psImplType")
         val algorithm = parameters.get("algorithm", "matrixFactorization")
         val K = parameters.getInt("K")
@@ -164,3 +165,10 @@ class OnlineTrainAndEval extends Serializable {
 }
 
 
+object OnlineTrainAndEval {
+  def main(args: Array[String]): Unit = {
+    //val params = Utils.getParameters(args)
+    val model = new OnlineTrainAndEval()
+    model.parameterParseAndRun(args)
+  }
+}

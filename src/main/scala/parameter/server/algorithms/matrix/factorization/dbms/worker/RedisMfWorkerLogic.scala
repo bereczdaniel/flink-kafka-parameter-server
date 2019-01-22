@@ -1,6 +1,4 @@
-package parameter.server.algorithms.matrix.factorization.redis
-
-import java.io.InputStream
+package parameter.server.algorithms.matrix.factorization.dbms.worker
 
 import com.redis.RedisClient
 import grizzled.slf4j.Logging
@@ -10,7 +8,7 @@ import parameter.server.algorithms.matrix.factorization.RecSysMessages.{Evaluati
 import parameter.server.algorithms.pruning.LEMPPruningFunctions._
 import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
-import parameter.server.redis.logic.worker.WorkerLogic
+import parameter.server.dbms.logic.worker.WorkerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
@@ -18,10 +16,10 @@ import scala.collection.mutable
 import scala.util.Random
 import scala.util.control.Breaks._
 
-class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
-                              rangeMin: Double, rangeMax: Double,
-                              workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5),
-                              host: String, port: Int, channelName: String)
+class RedisMfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
+                         rangeMin: Double, rangeMax: Double,
+                         workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5),
+                         host: String, port: Int, channelName: String)
   extends WorkerLogic[Long, Int, EvaluationRequest, Vector] with Logging {
 
   lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)

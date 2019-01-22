@@ -1,26 +1,28 @@
-package parameter.server.redis
+package parameter.server.dbms
 
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction
 import org.apache.flink.streaming.api.scala._
+import parameter.server.ParameterServerSkeleton
 import parameter.server.communication.Messages.Message
-import parameter.server.redis.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput, ParameterServerSkeleton, WorkerInput}
+import parameter.server.dbms.logic.worker.WorkerLogic
+import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
 
-class ParameterServer[T <: WorkerInput,
+class DbmsParameterServer[T <: WorkerInput,
                       P <: Parameter,
                       WK, SK](
                                env: StreamExecutionEnvironment,
-                               src: DataStream[T],
+                               inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P],
-                               serverPubSubSource: RichSourceFunction[String],
+                               serverToWorkerSource: RichSourceFunction[String],
                                serverToWorkerParse: String => Message[SK, WK, P]
                              ) extends ParameterServerSkeleton {
 
   def start(): DataStream[ParameterServerOutput] = {
     init()
-    workerStream(
+
+    WorkerOutputStream(
       workerInput(
-        src, serverToWorker())
+        inputStream, serverToWorker())
     )
   }
 
@@ -28,7 +30,7 @@ class ParameterServer[T <: WorkerInput,
 
   def serverToWorker(): DataStream[Message[SK, WK, P]] =
     env
-      .addSource(serverPubSubSource)
+      .addSource(serverToWorkerSource)
       .map(serverToWorkerParse)
 
   def workerInput(inputStream: DataStream[T], serverToWorkerStream: DataStream[Message[SK, WK, P]]): ConnectedStreams[Message[SK, WK, P], T] = {
@@ -41,7 +43,7 @@ class ParameterServer[T <: WorkerInput,
 //        .keyBy(_.destination.hashCode(), _.destination.hashCode())
   }
 
-  def workerStream(workerInputStream: ConnectedStreams[Message[SK, WK, P], T]): DataStream[ParameterServerOutput] =
+  def WorkerOutputStream(workerInputStream: ConnectedStreams[Message[SK, WK, P], T]): DataStream[ParameterServerOutput] =
     workerInputStream
       .flatMap(workerLogic)
 

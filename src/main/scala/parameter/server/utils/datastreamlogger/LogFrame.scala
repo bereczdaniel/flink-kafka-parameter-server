@@ -16,7 +16,7 @@ object LogFrame {
     import scala.collection.JavaConverters._
     env.getConfig.setGlobalJobParameters(ParameterTool.fromMap(Map("testProcessId" -> DataStreamLoggerMap.getCurrentTimestamp.toString).asJava))
     runPS(inputStream.map(new DataStreamLoggerMap[EvaluationRequest](dbw, _.evaluationId, "input", testProcessCategory)), env)
-      .map(new DataStreamLoggerMap[Recommendation](dbw, _.evaluationId, "output", testProcessCategory))
+      .forward.map(new DataStreamLoggerMap[Recommendation](dbw, _.evaluationId, "output", testProcessCategory))
   }
 
 }

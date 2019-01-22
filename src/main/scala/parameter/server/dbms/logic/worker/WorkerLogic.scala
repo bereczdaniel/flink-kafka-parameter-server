@@ -1,4 +1,4 @@
-package parameter.server.redis.logic.worker
+package parameter.server.dbms.logic.worker
 
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector

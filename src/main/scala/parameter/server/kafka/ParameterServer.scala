@@ -1,15 +1,13 @@
 package parameter.server.kafka
 
-import java.util.Properties
-
-import org.apache.flink.api.common.serialization
-import org.apache.flink.api.common.serialization.SimpleStringSchema
+import org.apache.flink.streaming.api.functions.sink.RichSinkFunction
+import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
+import parameter.server.ParameterServerSkeleton
 import parameter.server.communication.Messages.Message
 import parameter.server.kafka.logic.server.ServerLogic
 import parameter.server.kafka.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput, ParameterServerSkeleton, WorkerInput}
+import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Utils
 
 
@@ -21,10 +19,6 @@ import parameter.server.utils.Utils
   * @param serverLogic: Behaviour for the server nodes in the PS
   * @param serverToWorkerParse: Parse function to create message from string
   * @param workerToServerParse: Parse function to create message from string
-  * @param host: Host name for Kafka
-  * @param port: Port for Kafka
-  * @param serverToWorkerTopic: Topic name for the server --> worker communication
-  * @param workerToServerTopic: Topic name for the worker --> server communication
   * @param broadcastServerToWorkers: Communication tpye for the server --> worker communication
   * @tparam T: Data type of the input data stream
   * @tparam P: Data type of the parameter in the ML model
@@ -38,12 +32,11 @@ class ParameterServer[T <: WorkerInput,
                                inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
                                serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
-                               host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
+                               serverToWorkerSink: RichSinkFunction[String], serverToWorkerSource: RichParallelSourceFunction[String],
+                               workerToServerSink: RichSinkFunction[String], workerToServerSource: RichParallelSourceFunction[String],
                                broadcastServerToWorkers: Boolean = false) extends ParameterServerSkeleton {
 
   def start(): DataStream[ParameterServerOutput] = {
-    init()
-
     val (serverOutput, serverToWorkerStream) =
       Utils.splitStream(
         serverOutputStream(
@@ -56,21 +49,11 @@ class ParameterServer[T <: WorkerInput,
             inputStream, serverToWorker())
       ))
 
-    submitToKafkaTopic(serverToWorkerStream, serverToWorkerTopic)
-    submitToKafkaTopic(workerToServerStream, workerToServerTopic)
+    submitToWorkerFromServer(serverToWorkerStream)
+    submitToServerFromWorker(workerToServerStream)
+
     connectOutputStreams(serverOutput,workerOutput)
   }
-
-  lazy val properties = new Properties()
-
-  /**
-    * Set the properties for Kafka
-    */
-  def init(): Unit = {
-    properties.setProperty("bootstrap.servers", host + port)
-    properties.setProperty("group.id", "parameterServer")
-  }
-
 
   /**
     * Add the incoming messages as a Kafka source and parse them
@@ -78,7 +61,7 @@ class ParameterServer[T <: WorkerInput,
     */
   def serverToWorker(): DataStream[Message[SK, WK, P]] =
     env
-      .addSource(new FlinkKafkaConsumer011[String](serverToWorkerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest())
+      .addSource(serverToWorkerSource)
       .map(serverToWorkerParse)
 
   /**
@@ -87,7 +70,7 @@ class ParameterServer[T <: WorkerInput,
     */
   def workerToServer(): DataStream[Message[WK, SK, P]] =
     env
-      .addSource(new FlinkKafkaConsumer011[String](workerToServerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest())
+      .addSource(workerToServerSource)
       .map[Message[WK, SK, P]](workerToServerParse)
       .keyBy(_.destination.hashCode())
 
@@ -125,10 +108,15 @@ class ParameterServer[T <: WorkerInput,
     serverInputStream
       .process(serverLogic)
 
-  def submitToKafkaTopic[A](ds: DataStream[A], topic: String): Unit = 
+  def submitToServerFromWorker[A](ds: DataStream[A]): Unit =
     ds
     .map(_.toString)
-    .addSink(new FlinkKafkaProducer011[String](host + port, topic, new SimpleStringSchema()))
+    .addSink(workerToServerSink)
+
+  def submitToWorkerFromServer[A](ds: DataStream[A]): Unit =
+  ds
+    .map(_.toString)
+    .addSink(serverToWorkerSink)
 
   /**
     * Connect the events for the outer world from the servers and workers

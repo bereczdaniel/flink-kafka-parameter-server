@@ -1,4 +1,4 @@
-package parameter.server.algorithms.matrix.factorization.kafka
+package parameter.server.algorithms.matrix.factorization.kafka.server
 
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
@@ -8,7 +8,7 @@ import parameter.server.kafka.logic.server.AsynchronousServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
-class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector)
+class StateBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector)
   extends AsynchronousServerLogic[Long, Int, Vector] {
   override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
     new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
@@ -29,6 +29,6 @@ class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) =>
   }
 }
 
-object TrainAndEvalServerLogic {
-  def apply(_init: ItemId => Vector, _update: (Vector, Vector) => Vector): TrainAndEvalServerLogic = new TrainAndEvalServerLogic(_init, _update)
+object StateBackedMfServerLogic {
+  def apply(_init: ItemId => Vector, _update: (Vector, Vector) => Vector): StateBackedMfServerLogic = new StateBackedMfServerLogic(_init, _update)
 }

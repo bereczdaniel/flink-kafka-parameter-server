@@ -1,4 +1,4 @@
-package parameter.server.algorithms.matrix.factorization.kafkaredis
+package parameter.server.algorithms.matrix.factorization.kafka.worker
 
 import org.apache.flink.util.Collector
 import parameter.server.algorithms.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
@@ -7,7 +7,7 @@ import parameter.server.algorithms.pruning.LEMPPruningFunctions._
 import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
-import parameter.server.kafkaredis.logic.worker.WorkerLogic
+import parameter.server.kafka.logic.worker.WorkerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
@@ -15,9 +15,9 @@ import scala.collection.mutable
 import scala.util.Random
 import scala.util.control.Breaks._
 
-class TrainAndEvalWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
-                              rangeMin: Double, rangeMax: Double,
-                              workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5))
+class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
+                    rangeMin: Double, rangeMax: Double,
+                    workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5))
   extends WorkerLogic[Long, Int, EvaluationRequest, Vector]{
 
   lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)

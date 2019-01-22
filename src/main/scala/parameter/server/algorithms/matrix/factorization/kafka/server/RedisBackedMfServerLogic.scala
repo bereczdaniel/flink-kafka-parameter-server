@@ -1,16 +1,16 @@
-package parameter.server.algorithms.matrix.factorization.kafkaredis
+package parameter.server.algorithms.matrix.factorization.kafka.server
 
 import com.redis._
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
-import parameter.server.kafkaredis.logic.server.SynchronousServerLogic
+import parameter.server.kafka.logic.server.SynchronousServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
-class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,
-                              redisHost: String, redisPort: Int)  extends SynchronousServerLogic[Long, Int, Vector] {
+class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,
+                               redisHost: String, redisPort: Int)  extends SynchronousServerLogic[Long, Int, Vector] {
   // WARNING !! NOT USED: - only kept because class must implement as abstract field/method - can be deleted...
   override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
     new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
@@ -23,7 +23,7 @@ class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) =>
   override def onPullReceive(pull: Messages.Pull[Long, Int, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     //// original code with state:
-    //out.collect(Right(PullAnswer(pull.dest, pull.src, getOrElseUpdate(init(pull.dest)))))
+    //out.collect(Right(PullAnswer(pull.dest, pull.inputStream, getOrElseUpdate(init(pull.dest)))))
 
     //DEBUG:
     //println("Querying user vector " + pull.dest)
@@ -66,8 +66,8 @@ class TrainAndEvalServerLogic(_init: Int => Vector, _update: (Vector, Vector) =>
   }
 }
 
-object TrainAndEvalServerLogic {
+object RedisBackedMfServerLogic {
   def apply(_init: ItemId => Vector, _update: (Vector, Vector) => Vector,
-            redisHost: String, redisPort: Int): TrainAndEvalServerLogic =
-    new TrainAndEvalServerLogic(_init, _update, redisHost, redisPort)
+            redisHost: String, redisPort: Int): RedisBackedMfServerLogic =
+    new RedisBackedMfServerLogic(_init, _update, redisHost, redisPort)
 }
