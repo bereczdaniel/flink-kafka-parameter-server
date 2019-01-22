@@ -1,4 +1,4 @@
-package parameter.server.algorithms.matrix.factorization.kafka.worker
+package parameter.server.algorithms.matrix.factorization.impl.worker
 
 import org.apache.flink.util.Collector
 import parameter.server.algorithms.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
@@ -7,7 +7,7 @@ import parameter.server.algorithms.pruning.LEMPPruningFunctions._
 import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
-import parameter.server.kafka.logic.worker.WorkerLogic
+import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
@@ -146,8 +146,8 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
 
   override def onPullReceive(msg: Messages.Message[Int, Long, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+    //logger.info("User vector received by worker from Redis channel.")
     val userVector = msg.message.get
-
 
     val topK = generateLocalTopK(userVector, pruningStrategy)
 
@@ -155,14 +155,19 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
 
     _request match {
       case None =>
+        // when the observation which initiated the db query belongs to another worker - output a local topK for the observation with dummy additional data:
         out.collect(Left(EvaluationOutput(-1, msg.destination, topK, -1)))
 
       case Some(request) =>
+        // when the observation which initiated the db query belongs to this worker - output the local topK with the request data (itemId & ts):
         val itemVector = model.getOrElseUpdate(request.itemId, Vector(factorInitDesc.open().nextFactor(request.itemId)))
 
         val userDelta: Vector = train(userVector, request, itemVector)
 
+        // update user vector on server with userDelta
         out.collect(Right(Push(msg.destination, msg.source, userDelta)))
+        //// in redis:
+        //pushClient.evalSHA(pushScriptId.get, List(msg.source), userDelta.value.toList)
 
         out.collect(Left(EvaluationOutput(request.itemId, request.evaluationId, topK, request.ts)))
     }
@@ -170,8 +175,14 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
 
   override def onInputReceive(data: EvaluationRequest,
                               out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+    //logger.info("Input received by worker.")
     requestBuffer.update(data.evaluationId, data)
 
+    // Query user vector from server (it will then send to the server-to-worker channel for broadcasting):
     out.collect(Right(Pull(data.evaluationId, data.userId)))
+    //// in redis:
+    //redisClient.evalSHA(pullScriptId.get, List(data.userId),
+    //  List(data.evaluationId, channelName, numFactors, rangeMin, randomInitRangeMax))
+
   }
 }

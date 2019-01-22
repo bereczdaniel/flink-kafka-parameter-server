@@ -1,32 +1,38 @@
-package parameter.server.dbms
+package parameter.server
 
+import org.apache.flink.streaming.api.functions.sink.SinkFunction
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
-import parameter.server.ParameterServerSkeleton
 import parameter.server.communication.Messages.Message
-import parameter.server.dbms.logic.worker.WorkerLogic
+import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
+import parameter.server.utils.Utils
 
-class DbmsParameterServer[T <: WorkerInput,
+class WorkerOnlyParameterServer[T <: WorkerInput,
                       P <: Parameter,
                       WK, SK](
                                env: StreamExecutionEnvironment,
                                inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P],
                                serverToWorkerSource: SourceFunction[String],
-                               serverToWorkerParse: String => Message[SK, WK, P]
-                             ) extends ParameterServerSkeleton {
+                               serverToWorkerParse: String => Message[SK, WK, P],
+                               workerToServerSink: SinkFunction[Message[WK, SK, P]]
+                             )
+  extends ParameterServerSkeleton[T] (env: StreamExecutionEnvironment, inputStream: DataStream[T]) {
 
   def start(): DataStream[ParameterServerOutput] = {
-    init()
 
-    WorkerOutputStream(
-      workerInput(
-        inputStream, serverToWorker())
-    )
+    val (workerOutput, workerToServerStream) =
+      Utils.splitStream(
+        workerOutputStream(
+          workerInput(
+            inputStream, serverToWorker())
+        ))
+
+    submitToServerFromWorker(workerToServerStream)
+
+    workerOutput
   }
-
-  def init(): Unit = { }
 
   def serverToWorker(): DataStream[Message[SK, WK, P]] =
     env
@@ -43,9 +49,13 @@ class DbmsParameterServer[T <: WorkerInput,
 //        .keyBy(_.destination.hashCode(), _.destination.hashCode())
   }
 
-  def WorkerOutputStream(workerInputStream: ConnectedStreams[Message[SK, WK, P], T]): DataStream[ParameterServerOutput] =
+  def workerOutputStream(workerInputStream: ConnectedStreams[Message[SK, WK, P], T]): DataStream[Either[ParameterServerOutput, Message[WK, SK, P]]] =
     workerInputStream
       .flatMap(workerLogic)
 
+  def submitToServerFromWorker(ds: DataStream[Message[WK, SK, P]]): Unit =
+    ds
+      //.map(_.toString)
+      .addSink(workerToServerSink)
 
 }

@@ -8,6 +8,14 @@ import org.apache.flink.api.java.utils.ParameterTool
 object Utils {
 
   /**
+    * Loads a script file as a single string from a resource path
+    */
+  def loadScriptContent (resourcePath: String) = {
+    val scriptStream = getClass.getResourceAsStream(resourcePath)
+    scala.io.Source.fromInputStream(scriptStream).getLines.mkString("\n")
+  }
+
+  /**
     * Split a DataStream of Either to two separate stream
     * @param ds
     * @tparam A

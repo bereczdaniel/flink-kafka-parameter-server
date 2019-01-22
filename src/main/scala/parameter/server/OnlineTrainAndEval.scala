@@ -1,4 +1,4 @@
-package parameter.server.algorithms
+package parameter.server
 
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.core.fs.FileSystem
@@ -8,13 +8,13 @@ import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionW
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.{GlobalWindow, TimeWindow}
 import org.apache.flink.util.Collector
-import parameter.server.ParameterServerSkeleton
+import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
 import parameter.server.utils.Types.Recommendation
-import parameter.server.utils.datastreamlogger.{DbWriterFactory, LogFrame}
 import parameter.server.utils.Utils
+import parameter.server.utils.datastreamlogger.{DbWriterFactory, JobLogger}
 
 class OnlineTrainAndEval extends Serializable {
 
@@ -28,7 +28,7 @@ class OnlineTrainAndEval extends Serializable {
 
  def createPs(algorithm:String, psImplType: String,
               parameters: ParameterTool,
-              inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton = algorithm match {
+              inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = algorithm match {
    case "matrixFactorization" => MfPsFactory.createPs(psImplType, parameters, inputStream, env)
    case _ => throw new UnsupportedOperationException
  }
@@ -48,9 +48,9 @@ class OnlineTrainAndEval extends Serializable {
         // period of final NDCG evaluation
         val snapshotLength = parameters.getInt("snapshotLength", 86400)
 
-        val withMeasureFrame = parameters.getBoolean("withMeasureFrame", false)
+        val withMeasureFrame = parameters.getBoolean("withDataStreamLogger", false)
         val dbBackend = parameters.get("dbBackend", "couchbase")
-        // kafka / dbms / kafkaredis
+        // impl / dbms / kafkaredis
         val psImplType = parameters.get("psImplType")
         val algorithm = parameters.get("algorithm", "matrixFactorization")
         val K = parameters.getInt("K")
@@ -70,7 +70,7 @@ class OnlineTrainAndEval extends Serializable {
           outputFile: String,
           snapshotLength: Int,
           doEvalAndWrite: Boolean,
-          withMeasureFrame: Boolean,
+          withDataStreamLogger: Boolean,
           dbBackend: String,
           K: Int,
           parameters: ParameterTool): Unit = {
@@ -78,11 +78,11 @@ class OnlineTrainAndEval extends Serializable {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setParallelism(parallelism)
 
-    val psOutput =  if (withMeasureFrame) {
-      LogFrame.addLogFrameAndRunPS(createInput(env, inputFile),
+    val psOutput =  if (withDataStreamLogger) {
+      JobLogger.doWithLogging[EvaluationRequest, Recommendation](createInput(env, inputFile),
         DbWriterFactory.createDbWriter(dbBackend, parameters), env, psImplType,
-        (input, env) => runPS(createPs(algorithm, psImplType, parameters, input, env), K ,parallelism)
-
+        (input, env) => runPS(createPs(algorithm, psImplType, parameters, input, env), K ,parallelism),
+          _.evaluationId, _.evaluationId
       )
     } else {
       runPS(createPs(algorithm, psImplType, parameters, createInput(env, inputFile), env), K, parallelism)
@@ -106,7 +106,7 @@ class OnlineTrainAndEval extends Serializable {
       })
 
 
-  private def runPS(ps: ParameterServerSkeleton, K: Int, parallelism: Int): DataStream[Recommendation] =
+  private def runPS(ps: ParameterServerSkeleton[EvaluationRequest], K: Int, parallelism: Int): DataStream[Recommendation] =
     merge(ps
     .start()
     .flatMap(_ match {

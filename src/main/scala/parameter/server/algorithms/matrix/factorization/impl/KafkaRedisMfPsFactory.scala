@@ -1,27 +1,26 @@
-package parameter.server.algorithms.matrix.factorization.kafka
+package parameter.server.algorithms.matrix.factorization.impl
 
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala._
-import parameter.server.ParameterServerSkeleton
+import parameter.server.{KafkaPsFactory, ParameterServerSkeleton}
 import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
-import parameter.server.algorithms.matrix.factorization.kafka.server.RedisBackedMfServerLogic
-import parameter.server.algorithms.matrix.factorization.kafka.worker.MfWorkerLogic
-import parameter.server.algorithms.matrix.factorization.{GeneralMfProperties, MfPsFactory}
-import parameter.server.kafka.{KafkaPsFactory, ParameterServer}
+import parameter.server.algorithms.matrix.factorization.impl.server.RedisBackedMfServerLogic
+import parameter.server.algorithms.matrix.factorization.impl.worker.MfWorkerLogic
+import parameter.server.algorithms.matrix.factorization.{GeneralMfProperties, MessageParsers, MfPsFactory}
 import parameter.server.utils.Vector
 
 
-class KafkaRedisBackedMfPsFactory extends MfPsFactory {
+class KafkaRedisMfPsFactory extends MfPsFactory {
 
   override def createPs(generalMfProperties: GeneralMfProperties,
                         parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
-                        inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton = {
-    // kafka parameter
-    val kafkaHostName = parameters.get("kafka.host")
-    val kafkaPort = parameters.get("kafka.port").toInt
-    val serverToWorkerTopic = parameters.get("kafka.serverToWorkerTopic")
-    val workerToServerTopic = parameters.get("kafka.workerToServerTopic")
+                        inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = {
+    // impl parameter
+    val kafkaHostName = parameters.get("impl.host")
+    val kafkaPort = parameters.get("impl.port").toInt
+    val serverToWorkerTopic = parameters.get("impl.serverToWorkerTopic")
+    val workerToServerTopic = parameters.get("impl.workerToServerTopic")
 
     val broadcastServerToWorkers = parameters.getBoolean("broadcast", true)
 
@@ -31,15 +30,15 @@ class KafkaRedisBackedMfPsFactory extends MfPsFactory {
 
 
     new KafkaPsFactory[EvaluationRequest, Vector, Long, Int].createPs(
-      env,
+      env = env,
       inputStream = inputStream,
       workerLogic = new MfWorkerLogic(generalMfProperties.numFactors, generalMfProperties.learningRate,
-        generalMfProperties.negativeSampleRate, generalMfProperties.rangeMin, generalMfProperties.rangeMax, generalMfProperties.workerK,
+        generalMfProperties.negativeSampleRate, generalMfProperties.randomInitRangeMin, generalMfProperties.randomInitRangeMax, generalMfProperties.workerK,
         generalMfProperties.bucketSize),
       serverLogic = new RedisBackedMfServerLogic(x => Vector(factorInitDesc.open().nextFactor(x.hashCode())), Vector.vectorSum, redisHostName, redisPort),
-      serverToWorkerParse = ParameterServerSkeleton.pullAnswerFromString, workerToServerParse = ParameterServerSkeleton.workerToServerParse,
-      kafkaHostName, kafkaPort, serverToWorkerTopic, workerToServerTopic,
-      broadcastServerToWorkers)
+      serverToWorkerParse = MessageParsers.pullAnswerFromString, workerToServerParse = MessageParsers.pullOrPushFromString,
+      host = kafkaHostName, port = kafkaPort, serverToWorkerTopic = serverToWorkerTopic, workerToServerTopic = workerToServerTopic,
+      broadcastServerToWorkers = broadcastServerToWorkers)
   }
 
 }
@@ -63,12 +62,12 @@ class KafkaRedisBackedMfPsFactory extends MfPsFactory {
 //        EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
 //      })
 //
-//    val ps = new DbmsParameterServer[EvaluationRequest, Vector, Long, Int](
+//    val ps = new WorkerOnlyParameterServer[EvaluationRequest, Vector, Long, Int](
 //      env,
 //      inputStream = source,
 //      workerLogic = new MfWorkerLogic(n, learningRate, 9, -0.001, 0.001, 100, 75),
 //      serverLogic = new StateBackedMfServerLogic(x => Vector(factorInitDesc.open().nextFactor(x.hashCode())), Vector.vectorSum),
-//      serverToWorkerParse = pullAnswerFromString, workerToServerParse = workerToServerParse,
+//      serverToWorkerParse = pullAnswerFromString, pullOrPushFromString = pullOrPushFromString,
 //      host = "localhost:", port = 9092, serverToWorkerTopic = "serverToWorkerTopic", workerToServerTopic = "workerToServerTopic",
 //      broadcastServerToWorkers = true)
 //

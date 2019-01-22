@@ -1,4 +1,4 @@
-package parameter.server.kafka.logic.worker
+package parameter.server.logic.worker
 
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector

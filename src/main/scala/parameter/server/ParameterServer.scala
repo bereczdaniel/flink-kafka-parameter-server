@@ -1,23 +1,27 @@
-package parameter.server.kafka
+package parameter.server
 
 import org.apache.flink.streaming.api.functions.sink.SinkFunction
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
-import parameter.server.ParameterServerSkeleton
 import parameter.server.communication.Messages.Message
-import parameter.server.kafka.logic.server.ServerLogic
-import parameter.server.kafka.logic.worker.WorkerLogic
+import parameter.server.logic.server.ServerLogic
+import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Utils
 
 
 /**
+  *
   * Parameter server architecture on top of Apache Flink DataStream API with Apache Kafka for the iteration
   * @param env: Apache Flink DataStream environment
   * @param inputStream: Input stream
   * @param workerLogic: Behaviour for the worker nodes in the PS
   * @param serverLogic: Behaviour for the server nodes in the PS
+  * @param serverToWorkerSink: Flink sink to send messages from server towards worker (channel/topic producer)
+  * @param serverToWorkerSource: Flink source for receiving messages from server by worker (channel/topic consumer)
   * @param serverToWorkerParse: Parse function to create message from string
+  * @param workerToServerSink: Flink sink to send messages from worker towards server (channel/topic producer)
+  * @param workerToServerSource: Flink source for receiving messages from worker by server (channel/topic consumer)
   * @param workerToServerParse: Parse function to create message from string
   * @param broadcastServerToWorkers: Communication tpye for the server --> worker communication
   * @tparam T: Data type of the input data stream
@@ -31,12 +35,15 @@ class ParameterServer[T <: WorkerInput,
                                env: StreamExecutionEnvironment,
                                inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
-                               serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
                                serverToWorkerSink: SinkFunction[String], serverToWorkerSource: SourceFunction[String],
+                               serverToWorkerParse: String => Message[SK, WK, P],
                                workerToServerSink: SinkFunction[String], workerToServerSource: SourceFunction[String],
-                               broadcastServerToWorkers: Boolean = false) extends ParameterServerSkeleton {
+                               workerToServerParse: String => Message[WK, SK, P],
+                               broadcastServerToWorkers: Boolean = false)
+  extends ParameterServerSkeleton[T](env: StreamExecutionEnvironment, inputStream: DataStream[T]) {
 
   def start(): DataStream[ParameterServerOutput] = {
+
     val (serverOutput, serverToWorkerStream) =
       Utils.splitStream(
         serverOutputStream(

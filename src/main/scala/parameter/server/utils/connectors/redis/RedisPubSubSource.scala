@@ -1,4 +1,4 @@
-package parameter.server.utils
+package parameter.server.utils.connectors.redis
 
 import com.redis._
 import grizzled.slf4j.Logging

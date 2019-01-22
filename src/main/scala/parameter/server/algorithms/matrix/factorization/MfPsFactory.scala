@@ -4,15 +4,14 @@ import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironm
 import parameter.server.ParameterServerSkeleton
 import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
-import parameter.server.algorithms.matrix.factorization.dbms.RedisMfPsFactory
-import parameter.server.algorithms.matrix.factorization.kafka.{KafkaMfPsFactory, KafkaRedisBackedMfPsFactory}
+import parameter.server.algorithms.matrix.factorization.impl.{KafkaMfPsFactory, KafkaRedisMfPsFactory, RedisMfPsFactory}
 
 
 trait MfPsFactory {
 
   def createPs(generalMfProperties: GeneralMfProperties,
                         parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
-                        inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton
+                        inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest]
 
 }
 
@@ -24,15 +23,15 @@ object MfPsFactory {
     */
   def createPs(psImplType: String,
                parameters: ParameterTool,
-               inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton = {
+               inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = {
     val generalParam = parseGeneralParameters(parameters)
     (psImplType match {
       case "kafka" => new KafkaMfPsFactory
-      case "kafkaredis" => new KafkaRedisBackedMfPsFactory
+      case "kafkaredis" => new KafkaRedisMfPsFactory
       case "dbms" => new RedisMfPsFactory
       case _ => throw new UnsupportedOperationException
     }).createPs(generalParam,
-      parameters, RangedRandomFactorInitializerDescriptor(generalParam.numFactors, generalParam.rangeMin, generalParam.rangeMax),
+      parameters, RangedRandomFactorInitializerDescriptor(generalParam.numFactors, generalParam.randomInitRangeMin, generalParam.randomInitRangeMax),
       inputStream, env)
   }
 
@@ -41,7 +40,7 @@ object MfPsFactory {
     val negativeSampleRate = parameters.getInt("negativeSampleRate")
     val numFactors = parameters.getInt("numFactors")
     val rangeMin = parameters.getDouble("rangeMin")
-    val rangeMax = parameters.getDouble("rangeMax")
+    val rangeMax = parameters.getDouble("randomInitRangeMax")
     val workerK = parameters.getInt("workerK")
     val bucketSize = parameters.getInt("bucketSize")
 

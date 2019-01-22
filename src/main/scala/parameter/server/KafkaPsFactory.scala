@@ -1,4 +1,4 @@
-package parameter.server.kafka
+package parameter.server
 
 import java.util.Properties
 
@@ -7,8 +7,8 @@ import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import parameter.server.communication.Messages.Message
-import parameter.server.kafka.logic.server.ServerLogic
-import parameter.server.kafka.logic.worker.WorkerLogic
+import parameter.server.logic.server.ServerLogic
+import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.{Parameter, WorkerInput}
 
 
@@ -53,11 +53,12 @@ class KafkaPsFactory[T <: WorkerInput,
 
     new ParameterServer[T, P, WK, SK](
       env, inputStream, workerLogic, serverLogic,
-      serverToWorkerParse, workerToServerParse,
       serverToWorkerSink = new FlinkKafkaProducer011[String](host + port, serverToWorkerTopic, new SimpleStringSchema()),
       serverToWorkerSource = new FlinkKafkaConsumer011[String](serverToWorkerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest(),
+      serverToWorkerParse = serverToWorkerParse,
       workerToServerSink = new FlinkKafkaProducer011[String](host + port, workerToServerTopic, new SimpleStringSchema()),
       workerToServerSource = new FlinkKafkaConsumer011[String](workerToServerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest(),
+      workerToServerParse = workerToServerParse,
       broadcastServerToWorkers
     )
   }

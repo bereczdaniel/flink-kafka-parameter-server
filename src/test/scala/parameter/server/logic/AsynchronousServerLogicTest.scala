@@ -1,4 +1,4 @@
-package parameter.server.kafka.logic
+package parameter.server.logic
 
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.streaming.api.scala._
@@ -8,8 +8,8 @@ import parameter.server.Utils.generateInput
 import parameter.server._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Message, Pull, PullAnswer, Push}
-import parameter.server.kafka.logic.AsynchronousServerLogicTest._
-import parameter.server.kafka.logic.server.AsynchronousServerLogic
+import parameter.server.logic.AsynchronousServerLogicTest._
+import parameter.server.logic.server.AsynchronousServerLogic
 import parameter.server.utils.{Types, Utils, Vector}
 
 class AsynchronousServerLogicTest extends FlatSpec with Matchers {
