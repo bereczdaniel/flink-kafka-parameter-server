@@ -48,15 +48,15 @@ class OnlineTrainAndEval extends Serializable {
         // period of final NDCG evaluation
         val snapshotLength = parameters.getInt("snapshotLength", 86400)
 
-        val withMeasureFrame = parameters.getBoolean("withDataStreamLogger", false)
+        val withDataStreamLogger = parameters.getBoolean("withDataStreamLogger", false)
         val dbBackend = parameters.get("dbBackend", "couchbase")
-        // impl / dbms / kafkaredis
+        // kafka / redis / kafkaredis
         val psImplType = parameters.get("psImplType")
         val algorithm = parameters.get("algorithm", "matrixFactorization")
         val K = parameters.getInt("K")
         val doEvalAndWrite = parameters.getBoolean("doEvalAndWrite", true)
 
-        run(algorithm, psImplType, parallelism, inputFile, outputFile, snapshotLength, doEvalAndWrite, withMeasureFrame, dbBackend, K, parameters)
+        run(algorithm, psImplType, parallelism, inputFile, outputFile, snapshotLength, doEvalAndWrite, withDataStreamLogger, dbBackend, K, parameters)
       case None =>
     }
 

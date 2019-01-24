@@ -16,17 +16,17 @@ class KafkaRedisMfPsFactory extends MfPsFactory {
   override def createPs(generalMfProperties: GeneralMfProperties,
                         parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
                         inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = {
-    // impl parameter
-    val kafkaHostName = parameters.get("impl.host")
-    val kafkaPort = parameters.get("impl.port").toInt
-    val serverToWorkerTopic = parameters.get("impl.serverToWorkerTopic")
-    val workerToServerTopic = parameters.get("impl.workerToServerTopic")
+    // kafka parameters
+    val kafkaHostName = parameters.get("kafka.host")
+    val kafkaPort = parameters.get("kafka.port").toInt
+    val serverToWorkerTopic = parameters.get("kafka.serverToWorkerTopic")
+    val workerToServerTopic = parameters.get("kafka.workerToServerTopic")
 
     val broadcastServerToWorkers = parameters.getBoolean("broadcast", true)
 
-    // dbms parameter
-    val redisHostName = parameters.get("dbms.host")
-    val redisPort = parameters.get("dbms.port").toInt
+    // redis parameters
+    val redisHostName = parameters.get("redis.host")
+    val redisPort = parameters.get("redis.port").toInt
 
 
     new KafkaPsFactory[EvaluationRequest, Vector, Long, Int].createPs(

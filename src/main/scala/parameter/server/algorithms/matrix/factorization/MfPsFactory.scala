@@ -28,7 +28,7 @@ object MfPsFactory {
     (psImplType match {
       case "kafka" => new KafkaMfPsFactory
       case "kafkaredis" => new KafkaRedisMfPsFactory
-      case "dbms" => new RedisMfPsFactory
+      case "redis" => new RedisMfPsFactory
       case _ => throw new UnsupportedOperationException
     }).createPs(generalParam,
       parameters, RangedRandomFactorInitializerDescriptor(generalParam.numFactors, generalParam.randomInitRangeMin, generalParam.randomInitRangeMax),
@@ -39,7 +39,7 @@ object MfPsFactory {
     val learningRate = parameters.getDouble("learningRate")
     val negativeSampleRate = parameters.getInt("negativeSampleRate")
     val numFactors = parameters.getInt("numFactors")
-    val rangeMin = parameters.getDouble("rangeMin")
+    val rangeMin = parameters.getDouble("randomInitRangeMin")
     val rangeMax = parameters.getDouble("randomInitRangeMax")
     val workerK = parameters.getInt("workerK")
     val bucketSize = parameters.getInt("bucketSize")

@@ -7,8 +7,8 @@ import parameter.server.utils.connectors.redis.AbstractRedisSink
 class RedisMfWorkerToServerSink(host: String, port: Int, channelName: String, numFactors: Int, rangeMin: Double, rangeMax: Double)
     extends AbstractRedisSink[Message[Long, Int, Vector]](host, port) {
 
-  lazy val pullScriptId = redisClient.scriptLoad(Utils.loadScriptContent("/scripts/redis/pull_user_vector.lua"))
-  lazy val pushScriptId = redisClient.scriptLoad(Utils.loadScriptContent("/scripts/redis/push_update_user_vector.lua"))
+  lazy val pullScriptId = redisClient.scriptLoad(Utils.loadTextFileContent("/scripts/redis/pull_user_vector.lua"))
+  lazy val pushScriptId = redisClient.scriptLoad(Utils.loadTextFileContent("/scripts/redis/push_update_user_vector.lua"))
 
   override def processMessage(msg: Message[Long, Int, Vector]) = {
     msg match {

@@ -182,7 +182,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
     out.collect(Right(Pull(data.evaluationId, data.userId)))
     //// in redis:
     //redisClient.evalSHA(pullScriptId.get, List(data.userId),
-    //  List(data.evaluationId, channelName, numFactors, rangeMin, randomInitRangeMax))
+    //  List(data.evaluationId, channelName, numFactors, randomInitRangeMin, randomInitRangeMax))
 
   }
 }

@@ -4,7 +4,6 @@ package parameter.server.utils.datastreamlogger
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala._
-import parameter.server.utils.Types.WorkerInput
 
 object JobLogger {
 

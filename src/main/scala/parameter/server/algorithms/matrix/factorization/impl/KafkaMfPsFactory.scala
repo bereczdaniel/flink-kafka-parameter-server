@@ -16,10 +16,10 @@ class KafkaMfPsFactory extends MfPsFactory {
   override def createPs(generalMfProperties: GeneralMfProperties,
                         parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
                         inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = {
-    val hostName = parameters.get("impl.host")
-    val port = parameters.get("impl.port").toInt
-    val serverToWorkerTopic = parameters.get("impl.serverToWorkerTopic")
-    val workerToServerTopic = parameters.get("impl.workerToServerTopic")
+    val hostName = parameters.get("kafka.host")
+    val port = parameters.get("kafka.port").toInt
+    val serverToWorkerTopic = parameters.get("kafka.serverToWorkerTopic")
+    val workerToServerTopic = parameters.get("kafka.workerToServerTopic")
 
     val broadcastServerToWorkers = parameters.get("broadcast").contains("y")
 

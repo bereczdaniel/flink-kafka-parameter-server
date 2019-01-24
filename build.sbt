@@ -47,6 +47,7 @@ lazy val root = (project in file(".")).
   settings(
     libraryDependencies ++= commonDependencies,
     libraryDependencies ++= flinkDependencies.map(_ % "provided"),
+    //libraryDependencies ++= flinkDependencies.map(_ % "compile"),
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
     libraryDependencies ++= Seq(

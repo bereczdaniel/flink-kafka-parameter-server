@@ -10,9 +10,9 @@ object Utils {
   /**
     * Loads a script file as a single string from a resource path
     */
-  def loadScriptContent (resourcePath: String) = {
-    val scriptStream = getClass.getResourceAsStream(resourcePath)
-    scala.io.Source.fromInputStream(scriptStream).getLines.mkString("\n")
+  def loadTextFileContent(resourcePath: String): String = {
+    val textFileStream = getClass.getResourceAsStream(resourcePath)
+    scala.io.Source.fromInputStream(textFileStream).getLines.mkString("\n")
   }
 
   /**

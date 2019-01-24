@@ -18,13 +18,13 @@ object Messages {
     }
   }
 
-  // not used by dbms-only solution:
+  // not used by worker-only (dbms-based server) solution:
   case class Push[WK, SK, P <: Parameter](src: WK, dest: SK, msg: P) extends Message(src, dest, Some(msg)) {
     override def toString: String =
       s"Push:$src:$dest:$msg"
   }
 
-  // not used by dbms-only solution:
+  // not used by worker-only (dbms-based server) solution:
   case class Pull[WK, SK, P <: Parameter](src: WK, dest: SK) extends Message[WK, SK, P](src, dest, None) {
     override def toString: String =
       s"Pull:$src:$dest"

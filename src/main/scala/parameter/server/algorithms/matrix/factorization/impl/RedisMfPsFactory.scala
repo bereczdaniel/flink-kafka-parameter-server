@@ -16,9 +16,9 @@ class RedisMfPsFactory extends MfPsFactory {
   override def createPs(generalMfProperties: GeneralMfProperties,
                         parameters: ParameterTool, factorInitDesc: RangedRandomFactorInitializerDescriptor,
                         inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = {
-    val hostName = parameters.get("dbms.host")
-    val port = parameters.get("dbms.port").toInt
-    val channelName = parameters.get("dbms.channelName")
+    val hostName = parameters.get("redis.host")
+    val port = parameters.get("redis.port").toInt
+    val channelName = parameters.get("redis.channelName")
 
     new WorkerOnlyParameterServer[EvaluationRequest, Vector, Long, Int](
       env,
