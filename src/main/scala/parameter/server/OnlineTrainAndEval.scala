@@ -99,7 +99,7 @@ class OnlineTrainAndEval extends Serializable {
 
   private def createInput(env: StreamExecutionEnvironment, fileName: String): DataStream[EvaluationRequest] =
     env
-      .readTextFile("lastFM/sliced/first_10_idx")
+      .readTextFile(fileName) // "lastFM/sliced/first_10_idx"
       .map(line => {
         val fields = line.split(",")
         EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
