@@ -23,8 +23,10 @@ class DataStreamLoggerMap[M](
 
   var logConst: LogDataConstFields = _
 
-  override def open(parameters: Configuration): Unit =
+  override def open(parameters: Configuration): Unit = {
+    dbWriter.open
     logConst = new LogDataConstFields(processStage, getRuntimeContext.getExecutionConfig.getGlobalJobParameters.asInstanceOf[ParameterTool].getLong("testProcessId"), testProcessCategory)
+  }
 
   override def map(msg: M) = {
     dbWriter.writeToDb(LogDataStruct.createFromMessage(msg, getIdFromMessage, DataStreamLoggerMap.getCurrentTimestamp, logConst))

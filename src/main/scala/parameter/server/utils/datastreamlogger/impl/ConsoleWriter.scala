@@ -8,6 +8,8 @@ class ConsoleWriter extends DbWriter {
   }
 
   override def close: Unit = {}
+
+  override def open: Unit = {}
 }
 
 /**
