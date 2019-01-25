@@ -3,6 +3,7 @@ package parameter.server.utils.datastreamlogger
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.streaming.api.scala._
 
 /**
   * The Flink map function that must be called whenever a timestamp log is needed:

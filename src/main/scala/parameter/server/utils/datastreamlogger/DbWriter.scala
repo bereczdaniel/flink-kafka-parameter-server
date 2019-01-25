@@ -1,6 +1,6 @@
 package parameter.server.utils.datastreamlogger
 
-trait DbWriter {
+trait DbWriter extends Serializable {
   // TODO error handling, exceptions
   def writeToDb(d: LogDataStruct): Unit
 
