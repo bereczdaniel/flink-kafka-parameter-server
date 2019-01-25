@@ -81,10 +81,10 @@ object CouchBaseWriter {
 
   def createFromParameters(parameters: ParameterTool): CouchBaseWriter = {
     val username = parameters.get("couchbase.username", "admin")
-    val passworld = parameters.get("couchbase.password", "admin123")
+    val password = parameters.get("couchbase.password", "admin123")
     val bucketname = parameters.get("couchbase.bucketname", "asynctest")
     val nodes = parameters.get("couchbase.nodes", "localhost").split(",")
-    new CouchBaseWriter(username, passworld, bucketname, nodes:_*)
+    new CouchBaseWriter(username, password, bucketname, nodes:_*)
   }
 
   def main(args: Array[String]): Unit = {
