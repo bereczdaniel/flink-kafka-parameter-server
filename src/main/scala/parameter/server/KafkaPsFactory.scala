@@ -48,15 +48,16 @@ class KafkaPsFactory[T <: WorkerInput,
                 host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
                 broadcastServerToWorkers: Boolean = false
               ) = {
-    properties.setProperty("bootstrap.servers", host + port)
+    val kafkaServer = host + ":" + port
+    properties.setProperty("bootstrap.servers", kafkaServer)
     properties.setProperty("group.id", "parameterServer")
 
     new ParameterServer[T, P, WK, SK](
       env, inputStream, workerLogic, serverLogic,
-      serverToWorkerSink = new FlinkKafkaProducer011[String](host + port, serverToWorkerTopic, new SimpleStringSchema()),
+      serverToWorkerSink = new FlinkKafkaProducer011[String](kafkaServer, serverToWorkerTopic, new SimpleStringSchema()),
       serverToWorkerSource = new FlinkKafkaConsumer011[String](serverToWorkerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest(),
       serverToWorkerParse = serverToWorkerParse,
-      workerToServerSink = new FlinkKafkaProducer011[String](host + port, workerToServerTopic, new SimpleStringSchema()),
+      workerToServerSink = new FlinkKafkaProducer011[String](kafkaServer, workerToServerTopic, new SimpleStringSchema()),
       workerToServerSource = new FlinkKafkaConsumer011[String](workerToServerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest(),
       workerToServerParse = workerToServerParse,
       broadcastServerToWorkers
