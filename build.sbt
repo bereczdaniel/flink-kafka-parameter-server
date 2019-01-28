@@ -4,7 +4,7 @@ version := "0.1"
 
 scalaVersion := "2.11.7"
 
-lazy val flinkVersion = "1.6.0"
+lazy val flinkVersion = "1.7.1"
 lazy val breezeVersion = "0.13"
 lazy val loggerVersion = "1.7.25"
 
@@ -24,8 +24,8 @@ lazy val flinkDependencies = Seq(
   "org.apache.flink" %% "flink-scala" % flinkVersion,
   "org.apache.flink" %% "flink-streaming-scala" % flinkVersion,
   "org.apache.flink" %% "flink-streaming-java" % flinkVersion,
-  "org.apache.flink" % "flink-connector-kafka-0.11_2.11" % flinkVersion,
-  "org.apache.flink" %% "flink-test-utils" % "1.6.0"
+  //"org.apache.flink" % "flink-connector-kafka-0.11_2.11" % flinkVersion,  - not provided in flink cluster, see at compile dependencies
+  "org.apache.flink" %% "flink-test-utils" % flinkVersion
 )
 
 lazy val couchbaseDependencies = Seq(
@@ -47,9 +47,11 @@ lazy val root = (project in file(".")).
   settings(
     libraryDependencies ++= commonDependencies,
     libraryDependencies ++= flinkDependencies.map(_ % "provided"),
+    //libraryDependencies ++= flinkDependencies.map(_ % "compile"),  - for standalone running
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
     libraryDependencies ++= Seq(
+      "org.apache.flink" % "flink-connector-kafka-0.11_2.11" % flinkVersion,
       "net.debasishg" %% "redisclient" % "3.8",    // https://github.com/debasishg/scala-redis
       "org.slf4j" % "slf4j-simple" % loggerVersion,
       "org.clapper" %% "grizzled-slf4j" % "1.0.2"
