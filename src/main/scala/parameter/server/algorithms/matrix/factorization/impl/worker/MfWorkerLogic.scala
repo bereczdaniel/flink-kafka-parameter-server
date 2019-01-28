@@ -146,7 +146,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
 
   override def onPullReceive(msg: Messages.Message[Int, Long, Vector],
                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
-    //logger.info("User vector received by worker from Redis channel.")
+    //logger.info("User vector received by worker from server.")
     val userVector = msg.message.get
 
     val topK = generateLocalTopK(userVector, pruningStrategy)

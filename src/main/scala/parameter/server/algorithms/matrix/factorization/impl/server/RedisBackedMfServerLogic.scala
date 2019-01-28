@@ -5,12 +5,12 @@ import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
-import parameter.server.logic.server.SynchronousServerLogic
+import parameter.server.logic.server.AsynchronousServerLogic
 import parameter.server.utils.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
 class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,
-                               redisHost: String, redisPort: Int)  extends SynchronousServerLogic[Long, Int, Vector] {
+                               redisHost: String, redisPort: Int)  extends AsynchronousServerLogic[Long, Int, Vector] {
   // WARNING !! NOT USED: - only kept because class must implement as abstract field/method - can be deleted...
   override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
     new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
@@ -34,7 +34,7 @@ class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
       case Some(valueMap) =>
         var valueVectTmp = Vector(valueMap.keys.size)
         for (i <- valueMap.keys) {
-          valueVectTmp.value(i.toInt) = valueMap.get(i).get.toDouble
+          valueVectTmp.value(i.toInt) = valueMap(i).toDouble
         }
         //DEBUG:
         //println("Queried user vector " + pull.dest + ": " + valueVectTmp.toString, " = ", valueMap.toString())

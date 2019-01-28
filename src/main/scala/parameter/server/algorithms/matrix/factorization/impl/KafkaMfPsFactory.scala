@@ -21,7 +21,7 @@ class KafkaMfPsFactory extends MfPsFactory {
     val serverToWorkerTopic = parameters.get("kafka.serverToWorkerTopic")
     val workerToServerTopic = parameters.get("kafka.workerToServerTopic")
 
-    val broadcastServerToWorkers = parameters.get("broadcast").contains("y")
+    val broadcastServerToWorkers = parameters.getBoolean("broadcast")
 
     new KafkaPsFactory[EvaluationRequest, Vector, Long, Int].createPs(
       env = env,
