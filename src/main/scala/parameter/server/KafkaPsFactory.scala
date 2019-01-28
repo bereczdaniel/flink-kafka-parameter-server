@@ -2,7 +2,6 @@ package parameter.server
 
 import java.util.Properties
 
-import org.apache.flink.api.common.serialization
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
@@ -47,7 +46,7 @@ class KafkaPsFactory[T <: WorkerInput,
                 serverToWorkerParse: String => Message[SK, WK, P], workerToServerParse: String => Message[WK, SK, P],
                 host: String, port: Int, serverToWorkerTopic: String, workerToServerTopic: String,
                 broadcastServerToWorkers: Boolean = false
-              ) = {
+              ): ParameterServerSkeleton[T] = {
     val kafkaServer = host + ":" + port
     properties.setProperty("bootstrap.servers", kafkaServer)
     properties.setProperty("group.id", "parameterServer")
@@ -55,10 +54,10 @@ class KafkaPsFactory[T <: WorkerInput,
     new ParameterServer[T, P, WK, SK](
       env, inputStream, workerLogic, serverLogic,
       serverToWorkerSink = new FlinkKafkaProducer011[String](kafkaServer, serverToWorkerTopic, new SimpleStringSchema()),
-      serverToWorkerSource = new FlinkKafkaConsumer011[String](serverToWorkerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest(),
+      serverToWorkerSource = new FlinkKafkaConsumer011[String](serverToWorkerTopic, new SimpleStringSchema(), properties).setStartFromLatest(),
       serverToWorkerParse = serverToWorkerParse,
       workerToServerSink = new FlinkKafkaProducer011[String](kafkaServer, workerToServerTopic, new SimpleStringSchema()),
-      workerToServerSource = new FlinkKafkaConsumer011[String](workerToServerTopic, new serialization.SimpleStringSchema(), properties).setStartFromLatest(),
+      workerToServerSource = new FlinkKafkaConsumer011[String](workerToServerTopic, new SimpleStringSchema(), properties).setStartFromLatest(),
       workerToServerParse = workerToServerParse,
       broadcastServerToWorkers
     )
