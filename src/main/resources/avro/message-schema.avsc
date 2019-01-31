@@ -1,0 +1,25 @@
+{
+  "namespace": "flink-kafka-ps",
+  "type": "record",
+  "name": "message",
+  "fields": [
+    {
+      "name": "msg-type",
+      "type": "enum",
+      "symbols": ["Push", "Pull", "PullAnswer"]
+    },
+    {
+      "name": "src",
+      "type": "long"
+    },
+    {
+      "name": "dst",
+      "type": "long"
+    },
+    {
+      "name": "msg-vec",
+      "type": ["array", "null"],
+      "items": "double"
+    }
+  ]
+}

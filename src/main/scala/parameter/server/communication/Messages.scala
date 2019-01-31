@@ -38,4 +38,7 @@ object Messages {
   class NotSupportedWorkerInput extends Exception
   class NotSupportedMessage extends Exception
   class NotSupportedOutput extends Exception
+
+  // NOTE: Matching Avro schema(s) defined in resources/avro
+
 }
