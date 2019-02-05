@@ -1,6 +1,6 @@
 package parameter.server.algorithms
 
-import parameter.server.utils.Types.ItemId
+import parameter.server.algorithms.matrix.factorization.Types.ItemId
 
 object Metrics {
 

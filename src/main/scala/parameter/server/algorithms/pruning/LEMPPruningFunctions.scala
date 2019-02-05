@@ -1,6 +1,6 @@
 package parameter.server.algorithms.pruning
 
-import parameter.server.utils.Types.ItemId
+import parameter.server.algorithms.matrix.factorization.Types.ItemId
 import parameter.server.utils.Vector
 
 

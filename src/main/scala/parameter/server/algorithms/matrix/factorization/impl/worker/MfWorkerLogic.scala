@@ -3,13 +3,15 @@ package parameter.server.algorithms.matrix.factorization.impl.worker
 import org.apache.flink.util.Collector
 import parameter.server.algorithms.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
+import parameter.server.algorithms.matrix.factorization.Types
+import parameter.server.algorithms.matrix.factorization.Types.ItemId
 import parameter.server.algorithms.pruning.LEMPPruningFunctions._
 import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
 import parameter.server.logic.worker.WorkerLogic
-import parameter.server.utils.Types.ItemId
-import parameter.server.utils.{Types, Vector}
+import parameter.server.utils.Types.ParameterServerOutput
+import parameter.server.utils.Vector
 
 import scala.collection.mutable
 import scala.util.Random
@@ -145,7 +147,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
   }
 
   override def onPullReceive(msg: Messages.Message[Int, Long, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+                             out: Collector[Either[ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
     //logger.info("User vector received by worker from server.")
     val userVector = msg.message.get
 
@@ -174,7 +176,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
   }
 
   override def onInputReceive(data: EvaluationRequest,
-                              out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
+                              out: Collector[Either[ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
     //logger.info("Input received by worker.")
     requestBuffer.update(data.evaluationId, data)
 

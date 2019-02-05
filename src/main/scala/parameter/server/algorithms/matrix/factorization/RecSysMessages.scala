@@ -1,6 +1,7 @@
 package parameter.server.algorithms.matrix.factorization
 
-import parameter.server.utils.Types._
+import parameter.server.algorithms.matrix.factorization.Types.{ItemId, UserId}
+import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Vector
 
 object RecSysMessages {
