@@ -9,6 +9,10 @@ object Types {
 
   // Represents the input of the parameter server
   abstract class WorkerInput(val destination: AnyVal)
+  abstract class DataInput(val destination: AnyVal)
+  abstract class ModelInput[P <: Parameter](val destination: AnyVal, val parameter: P)
 
   trait ParameterServerOutput
+
+
 }

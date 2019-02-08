@@ -1,6 +1,6 @@
 package parameter.server.algorithms.matrix.factorization
 
-import parameter.server.algorithms.matrix.factorization.Types.{ItemId, UserId}
+import parameter.server.algorithms.matrix.factorization.Types.{ItemId, Prediction, UserId}
 import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Vector
 
@@ -15,5 +15,5 @@ object RecSysMessages {
       id.toString + ":" + parameter.value.tail.foldLeft(parameter.value.head.toString)((acc, c) => acc + "," + c.toString)
   }
 
-  case class EvaluationOutput(itemId: Int, evaluationId: Long, topK: List[(ItemId, Double)], ts: Long) extends ParameterServerOutput
+  case class EvaluationOutput(itemId: Int, evaluationId: Long, topK: List[Prediction], ts: Long) extends ParameterServerOutput
 }

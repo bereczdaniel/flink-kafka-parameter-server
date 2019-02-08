@@ -1,19 +1,54 @@
 package parameter.server.algorithms.matrix.factorization
 
 import scala.collection.mutable
+import parameter.server.utils.Vector
 
 object Types {
 
 
   case class Recommendation(targetId: ItemId, topK: List[ItemId], evaluationId: Long, timestamp: Long)
 
+  /**
+    * Important properties to have:
+    *   Always find (id, vector) pairs
+    *   Always descending order
+    * @param id
+    * @param length
+    */
+  case class ItemVector(id: ItemId, vector: Vector) extends Ordered[ItemVector] {
+    self =>
+    override def compare(that: ItemVector): UserId =
+      if(self.vector.length == that.vector.length)
+        self.id compare that.id
+      else
+        self.vector.length compare that.vector.length
+  }
+
+  /**
+    * Import properties to have:
+    *   always descending on score
+    * @param itemId
+    * @param score
+    */
+  case class Prediction(itemId: ItemId, score: Double) extends Ordered[Prediction]{ self =>
+
+    import scala.math.Ordered.orderingToOrdered
+
+    def compare(that: Prediction): Int =
+          -(self.score compare that.score)
+  }
+
   // Types needed by matrix factorization
   type UserId = Int
   type ItemId = Int
-  type TopK = mutable.PriorityQueue[(ItemId, Double)]
+  type TopK = mutable.PriorityQueue[Prediction]
 
-  val topKOrdering: Ordering[(ItemId, Double)] = Ordering[Double].on[(ItemId, Double)](x => -x._2)
 
   def createTopK: TopK =
-    new mutable.PriorityQueue[(ItemId, Double)]()(topKOrdering)
+    new mutable.PriorityQueue[Prediction]()
+
+
+  def asd(): Unit ={
+    val a = createTopK
+  }
 }

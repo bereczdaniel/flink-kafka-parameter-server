@@ -125,7 +125,7 @@ class OnlineTrainAndEval extends Serializable {
                            out: Collector[Recommendation]): Unit = {
 
         val target = elements.map(_.itemId).max
-        val topK = elements.flatMap(_.topK).toList.sortBy(_._2).distinct.takeRight(K).map(_._1)
+        val topK = elements.flatMap(_.topK).toList.sortBy(_.score).distinct.takeRight(K).map(_.itemId)
         val id = elements.head.evaluationId
         val ts = elements.map(_.ts).max
         out.collect(Recommendation(target, topK, id, ts))

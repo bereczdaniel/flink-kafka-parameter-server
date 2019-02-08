@@ -1,6 +1,6 @@
 package parameter.server.algorithms.pruning
 
-import parameter.server.algorithms.matrix.factorization.Types.ItemId
+import parameter.server.algorithms.matrix.factorization.Types.{ItemId, ItemVector}
 import parameter.server.utils.Vector
 
 
@@ -18,8 +18,8 @@ object LEMPPruningFunctions {
     * @return
     * A filter function that selects vectors based on this pruning strategy
     */
-  def lengthPruning(minLengthSqr: Double)(v: (ItemId, Vector)): Boolean = {
-    v._2.length * v._2.length >= minLengthSqr
+  def lengthPruning(minLengthSqr: Double)(v: ItemVector): Boolean = {
+    v.vector.length * v.vector.length >= minLengthSqr
   }
 
   /**
@@ -34,7 +34,7 @@ object LEMPPruningFunctions {
     * @return
     * A filter function that selects vectors based on this pruning strategy
     */
-  def coordPruning(f: Int, userVector: Vector, theta_b_q: Double): ((ItemId, Vector)) => Boolean = {
+  def coordPruning(f: Int, userVector: Vector, theta_b_q: Double): (ItemVector) => Boolean = {
     val (l_f, u_f) = {
       val q_bar_f = userVector.value(f) / userVector.length
       val a = q_bar_f * theta_b_q
@@ -44,8 +44,8 @@ object LEMPPruningFunctions {
       (if ((q_bar_f >= 0) || (L_f_prime > theta_b_q / q_bar_f)) L_f_prime else -1.0,
         if ((q_bar_f <= 0) || (U_f_prime < theta_b_q / q_bar_f)) U_f_prime else 1.0)
     }
-    p: ((ItemId, Vector)) =>
-      val p_bar_f = p._2.value(f) / p._2.length
+    p: (ItemVector) =>
+      val p_bar_f = p.vector.value(f) / p.vector.length
       (l_f <= p_bar_f) && (p_bar_f <= u_f)
   }
 
@@ -61,7 +61,7 @@ object LEMPPruningFunctions {
     * @return
     * A filter function that selects vectors based on this pruning strategy
     */
-  def incrPruning(F: Array[Int], user: Vector, theta: Double): ((ItemId, Vector)) => Boolean = {
+  def incrPruning(F: Array[Int], user: Vector, theta: Double): (ItemVector) => Boolean = {
     val n = F.length // number of factors we prune by
     val q_mF_sqr = { // $||\mathbf q_{-F}||^2$ (not normalised)
       var i = 0
@@ -72,13 +72,13 @@ object LEMPPruningFunctions {
       }
       user.length * user.length - q_F_sqr
     }
-    p: ((ItemId, Vector)) =>
+    p: (ItemVector) =>
       var i = 0
       var q_F_p_F = 0.0 // $\mathbf q_F^T\mathbf p_F$ (not normalised)
     var p_F_sqr = 0.0 // $||\mathbf p_F||^2$ (also not normalised)
       while (i < n) {
-        q_F_p_F += user.value(F(i)) * p._2.value(F(i))
-        p_F_sqr += p._2.value(F(i)) * p._2.value(F(i))
+        q_F_p_F += user.value(F(i)) * p.vector.value(F(i))
+        p_F_sqr += p.vector.value(F(i)) * p.vector.value(F(i))
         i += 1
       }
       // Inequality (5) is rearranged, to avoid square roots, as
@@ -86,7 +86,7 @@ object LEMPPruningFunctions {
 
       // The right hand side of the inequality is the square of this (need to check if positive)
       val u_bound = theta - q_F_p_F
-      (u_bound < 0.0) || (q_mF_sqr * (p._2.length * p._2.length - p_F_sqr) >= u_bound * u_bound)
+      (u_bound < 0.0) || (q_mF_sqr * (p.vector.length * p.vector.length - p_F_sqr) >= u_bound * u_bound)
   }
 }
 

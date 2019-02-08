@@ -1,11 +1,13 @@
-package parameter.server.logic.worker
+package parameter.server.algorithms.models
 
 /**
   * Represents a machine learning model.
   * @tparam K: Type of the key
   * @tparam P: Type of the parameter
   */
-abstract class Model[K,P]() {
+abstract class ModelState[K,P]() {
+
+  def apply(key: K): P = get(key).get
 
   /**
     * Binary operator, on how to combine two parameter
@@ -13,7 +15,13 @@ abstract class Model[K,P]() {
     */
   def updateFunction: (P,P) => P
 
+  /**
+    * Defines how an element should be initialized
+    * @return
+    */
   def initFunction: K => P
+
+  def keys: Array[K]
 
   /**
     * Returns the corresponding the value, if it doesn't exist, then init
