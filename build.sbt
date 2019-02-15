@@ -46,13 +46,17 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies ++= flinkDependencies.map(_ % "provided"),
-    //libraryDependencies ++= flinkDependencies.map(_ % "compile"),  - for standalone running
+    //libraryDependencies ++= flinkDependencies.map(_ % "provided"), // for flink submission
+    libraryDependencies ++= flinkDependencies.map(_ % "compile"),    // for standalone running
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
     libraryDependencies ++= Seq(
       "org.apache.flink" % "flink-connector-kafka-0.11_2.11" % flinkVersion,
-      "net.debasishg" %% "redisclient" % "3.8",    // https://github.com/debasishg/scala-redis
+      "com.github.scredis" %% "scredis" % "2.2.3",    // https://github.com/scredis/scredis
+      "com.typesafe.akka" %% "akka-actor" % "2.5.17",
+      "com.typesafe.akka" %% "akka-protobuf" % "2.5.17",
+      "com.typesafe.akka" %% "akka-slf4j" % "2.5.17",
+      "com.typesafe.akka" %% "akka-stream" % "2.5.17",
       "org.slf4j" % "slf4j-simple" % loggerVersion,
       "org.clapper" %% "grizzled-slf4j" % "1.0.2"
     )
