@@ -1,6 +1,6 @@
 package parameter.server.utils.connectors.redis
 
-import com.redis._
+import scredis._
 import grizzled.slf4j.Logging
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction
@@ -9,37 +9,38 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceCont
 class RedisPubSubSource (host: String, port: Integer, channelName: String) extends RichSourceFunction[String] with Logging {
 
   var sourceContext: SourceContext[String] = _
-  var client: RedisClient = _
+  var client: Redis = _
 
   override def open(parameters: Configuration) = {
     // Remark: parameters is said to be deprecated in Flink API.
-    client = new RedisClient(host, port)
+    client = new Redis(host, port)
   }
 
   @volatile var isRunning = true
 
   override def cancel(): Unit = {
     isRunning = false
-    client.disconnect
+    client.quit()
   }
 
-  def msgConsumeCallback(msg: PubSubMessage) = {
+  def msgConsumeCallback: PartialFunction[PubSubMessage, Unit] = {
     //logger.info("Message received.")
-    msg match {
-      case S(channel, _) => // subscribe - do nothing.
-      case U(channel, _) => // unsubscribe - do nothing.
+    //import PubSubMessage._
+    //msg match {
+    //  case Subscribe(channel, _) => // subscribe - do nothing.
+    //  case Unsubscribe(channel, _) => // unsubscribe - do nothing.
 
-      case M(channel, msgContent) =>
-        sourceContext.collect(msgContent)
+      case message@PubSubMessage.Message(_, _) =>
+        sourceContext.collect(message.readAs[String])
 
-      case E(throwable) =>
-        logger.error("Error message received from db channel.", throwable)
-    }
+      //case E(throwable) =>
+      //  logger.error("Error message received from db channel.", throwable)
+    //}
   }
 
   override def run(ctx: SourceContext[String]): Unit = {
     sourceContext = ctx
-    client.subscribe(channelName)(msgConsumeCallback(_))
+    client.subscriber.subscribe(channelName)(msgConsumeCallback)
     while (isRunning) {
       //for {
       //  data <- client. get data ...

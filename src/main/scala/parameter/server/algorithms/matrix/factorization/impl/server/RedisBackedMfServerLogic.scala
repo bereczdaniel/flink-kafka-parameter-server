@@ -1,8 +1,8 @@
 package parameter.server.algorithms.matrix.factorization.impl.server
 
-import com.redis._
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
+import scredis.{RedisCluster, Server}
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
 import parameter.server.logic.server.AsynchronousServerLogic
@@ -15,7 +15,7 @@ class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
   override lazy val model: ValueState[Vector] = getRuntimeContext.getState(
     new ValueStateDescriptor[Vector]("shared parameters", classOf[Vector]))
 
-  @transient lazy val r = new RedisClient(redisHost, redisPort)
+  @transient lazy val r = RedisCluster(Server(redisHost, redisPort))
 
   @transient lazy val init: Int => Vector = _init
   @transient lazy val update: (Vector, Vector) => Vector = _update
@@ -27,30 +27,33 @@ class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
 
     //DEBUG:
     //println("Querying user vector " + pull.dest)
+    import r.dispatcher
 
-    val valueMapOpt =  r.hgetall1(pull.dest)
+    val valueMapFuture = r.hGetAll(pull.dest.toString)
 
-    val valueVect: Vector = valueMapOpt match {
-      case Some(valueMap) =>
-        var valueVectTmp = Vector(valueMap.keys.size)
-        for (i <- valueMap.keys) {
-          valueVectTmp.value(i.toInt) = valueMap(i).toDouble
-        }
-        //DEBUG:
-        //println("Queried user vector " + pull.dest + ": " + valueVectTmp.toString, " = ", valueMap.toString())
+    valueMapFuture.map { valueMapOpt =>
+      val valueVect: Vector = valueMapOpt match {
+        case Some(valueMap) =>
+          var valueVectTmp = Vector(valueMap.keys.size)
+          for (i <- valueMap.keys) {
+            valueVectTmp.value(i.toInt) = valueMap(i).toDouble
+          }
+          //DEBUG:
+          //println("Queried user vector " + pull.dest + ": " + valueVectTmp.toString, " = ", valueMap.toString())
 
-        valueVectTmp
-      case None =>
-        val valueVectTmp = init(pull.dest)
+          valueVectTmp
+        case None =>
+          val valueVectTmp = init(pull.dest)
 
-        //DEBUG:
-        //print("Initialized user vector " + pull.dest + ": ")
-        //valueVectTmp.value.zipWithIndex.map(e => (e._2,e._1)).foreach(e => print(e._1," -> ", e._2))
+          //DEBUG:
+          //print("Initialized user vector " + pull.dest + ": ")
+          //valueVectTmp.value.zipWithIndex.map(e => (e._2,e._1)).foreach(e => print(e._1," -> ", e._2))
 
-        r.hmset(pull.dest, valueVectTmp.value.zipWithIndex.map(e => (e._2,e._1)))
-        valueVectTmp
+          r.hmSet(pull.dest.toString, valueVectTmp.value.zipWithIndex.map(e => (e._2.toString, e._1.toString)).toMap)
+          valueVectTmp
+      }
+      out.collect(Right(PullAnswer(pull.dest, pull.src, valueVect)))
     }
-    out.collect(Right(PullAnswer(pull.dest, pull.src, valueVect)))
   }
 
   override def onPushReceive(push: Messages.Push[Long, Int, Vector],
@@ -61,7 +64,7 @@ class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
 
     // WARNING: !! WE DON'T USE THE update FUNCTION SINCE THE INCREMENT IS DONE BY THE DB
     for (i <- push.msg.value.indices) {
-      r.hincrbyfloat(push.dest, i, push.msg.value(i).toFloat)
+      r.hIncrByFloat(push.dest.toString, i.toString, push.msg.value(i).toFloat)
     }
   }
 }
