@@ -7,8 +7,17 @@ import parameter.server.utils.Vector
 object RecSysMessages {
 
   case class Rating(userId: UserId, itemId: ItemId, rating: Double) extends WorkerInput(userId)
+
+  //TODO temporary solution, do a refactor!!!!!
+  case class Temp(data: Either[EvaluationRequest, ModelParameter]) extends WorkerInput {
+    override val destination: AnyVal =
+      data match {
+        case Left(eval) => eval.destination
+        case Right(mp) => mp.destination
+      }
+  }
   case class EvaluationRequest(userId: Int, itemId: Int, evaluationId: Long, rating: Double, ts: Long) extends WorkerInput(userId)
-  case class ModelParameter(id: Int, param: Vector) extends WorkerInput(id)
+  sealed abstract class ModelParameter(id: Int, param: Vector) extends WorkerInput(id)
   case class UserParameter(userId: Int, parameter: Vector) extends ModelParameter(userId, parameter)
   case class ItemParameter(itemId: Int, parameter: Vector) extends ModelParameter(itemId, parameter)
   case class NegativeSample(userId: UserId, itemId: ItemId, rating: Double) extends WorkerInput

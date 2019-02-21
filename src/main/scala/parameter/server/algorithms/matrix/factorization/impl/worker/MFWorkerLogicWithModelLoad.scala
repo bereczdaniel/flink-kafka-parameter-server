@@ -15,7 +15,7 @@ import scala.collection.mutable
 class MFWorkerLogicWithModelLoad(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
                                  rangeMin: Double, rangeMax: Double,
                                  workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5))
-  extends WorkerLogic[Long, Int, Either[EvaluationRequest, ModelParameter], Vector] {
+  extends WorkerLogic[Long, Int, Temp, Vector] {
 
   lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
   lazy val SGDUpdater = new SGDUpdater(learningRate)
@@ -53,10 +53,10 @@ class MFWorkerLogicWithModelLoad(numFactors: Int, learningRate: Double, negative
     }
   }
 
-  override def onInputReceive(data: Either[EvaluationRequest, ModelParameter],
+  override def onInputReceive(data: Temp,
                               out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Long, Int, Vector]]]): Unit = {
 
-    data match {
+    data.data match {
       case Left(evaluationRequest) =>
         requestBuffer.update(evaluationRequest.evaluationId, evaluationRequest)
         out.collect(Right(Pull(evaluationRequest.evaluationId, evaluationRequest.userId)))
