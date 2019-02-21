@@ -6,7 +6,7 @@ import scredis.{RedisCluster, Server}
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
 import parameter.server.logic.server.AsynchronousServerLogic
-import parameter.server.utils.Types.ItemId
+import parameter.server.algorithms.matrix.factorization.Types.ItemId
 import parameter.server.utils.{Types, Vector}
 
 class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,
