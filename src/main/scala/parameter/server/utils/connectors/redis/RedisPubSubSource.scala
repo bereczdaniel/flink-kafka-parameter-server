@@ -9,11 +9,12 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceCont
 class RedisPubSubSource (host: String, port: Integer, channelName: String) extends RichSourceFunction[String] with Logging {
 
   var sourceContext: SourceContext[String] = _
-  var client: Redis = _
+//  var client: Redis = _
+  lazy val client: Redis = new Redis(host, port)
 
   override def open(parameters: Configuration) = {
     // Remark: parameters is said to be deprecated in Flink API.
-    client = new Redis(host, port)
+//    client = new Redis(host, port)
   }
 
   @volatile var isRunning = true
