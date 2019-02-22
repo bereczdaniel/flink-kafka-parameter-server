@@ -31,7 +31,7 @@ lazy val flinkDependencies = Seq(
 )
 
 lazy val flinkKafkaDependencies = Seq(
-  "org.apache.flink" % "flink-connector-kafka-0.11_2.11" % flinkVersion,
+  "org.apache.flink" % "flink-connector-kafka-0.11_2.11" % flinkVersion
 )
 
 lazy val couchbaseDependencies = Seq(
