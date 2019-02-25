@@ -22,6 +22,13 @@ class ItemModel(learningRate: Double, negativeSampleRate: Int, numFactors: Int,
   }
 
 
+  /**
+    * Update the model, using the given user-item pair
+    * @param userVector
+    * @param itemId
+    * @param rating
+    * @return
+    */
   def train(userVector: Vector, itemId: ItemId, rating: Double): Vector = {
     val negativeUserDelta = calculateNegativeSamples(Some(itemId), userVector)
     val itemVector = model.getOrElseInit(itemId)
@@ -32,6 +39,12 @@ class ItemModel(learningRate: Double, negativeSampleRate: Int, numFactors: Int,
     Vector.vectorSum(negativeUserDelta, Vector(positiveUserDelta))
   }
 
+
+  /**
+    * Set a model parameter
+    * @param itemId
+    * @param param
+    */
   def set(itemId: ItemId, param: Vector): Unit =
     model.set(itemId, param)
 

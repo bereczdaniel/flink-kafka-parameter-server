@@ -14,14 +14,30 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
            K: Int, pruningStrategy: LEMPPruningStrategy) extends ModelState[ItemId, Vector]{
 
 
+  /**
+    * Defines how to init new vectors
+    */
   lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
 
+  /**
+    * Every id - vector pair
+    */
   private val model = new mutable.HashMap[ItemId, Vector]()
+
+  /**
+    * Every item vector, sorted by their lengths
+    */
   private val itemIdsDescendingByLength = new mutable.TreeSet[ItemVector]()
 
   private var ids: Set[ItemId] = Set()
 
   //TODO Check logic
+  /**
+    * LEMP algo, tests later
+    * @param userVector
+    * @param pruning
+    * @return
+    */
   def generateFocusSet(userVector: Vector, pruning: LEMPPruningStrategy): (Int, Array[Int]) = {
     val focus = ((1 until userVector.value.length) :\ 0) { (i, f) =>
       if (userVector.value(i) * userVector.value(i) > userVector.value(f) * userVector.value(f))
@@ -42,6 +58,16 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
     (focus, focusSet)
   }
 
+  /**
+    * LEMP algo, write tests later
+    * @param topK
+    * @param currentBucket
+    * @param pruning
+    * @param focus
+    * @param focusSet
+    * @param userVector
+    * @return
+    */
   def pruneCandidateSet(topK: TopK, currentBucket: List[ItemVector], pruning: LEMPPruningStrategy,
                         focus: ItemId, focusSet: Array[ItemId], userVector: Vector): List[ItemVector] = {
     val theta = if (topK.length < K) 0.0 else topK.head.score
@@ -68,6 +94,11 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
       })
   }
 
+  /**
+    * Return the top k most similar vectors for the query vector
+    * @param userVector
+    * @return
+    */
   def generateTopK(userVector: Vector): TopK = {
     val topK = createTopK
     val buckets = itemIdsDescendingByLength.toList.grouped(bucketSize)
@@ -119,14 +150,29 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
   override def initFunction: ItemId => Vector = newItemId =>
     Vector(factorInitDesc.open().nextFactor(newItemId))
 
+
+  /**
+    * Returns all the IDs
+    * @return
+    */
   override def keys: Array[ItemId] =
     ids.toArray
 
 
+  /**
+    * Update the vector of the geiven id using the update function and the new value
+    * @param key
+    * @param newValue
+    */
   override def updateWith(key: ItemId, newValue: Vector): Unit = {
     super.updateWith(key, newValue)
   }
 
+  /**
+    * Returns the vector for the given id, or generates a new one if there ie none
+    * @param key
+    * @return
+    */
   override def getOrElseInit(key: ItemId): Vector = {
     get(key) match {
       case Some(vector) => vector
@@ -170,6 +216,12 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
   }
 
   //TODO tests
+  /**
+    * Remove the previous length for the given id, and add the new one
+    * @param key
+    * @param updatedValue
+    * @param oldValue
+    */
   def updateItemIdsByLength(key: ItemId, updatedValue: Vector, oldValue: Vector): Unit = {
     itemIdsDescendingByLength.remove(ItemVector(key, oldValue))
     itemIdsDescendingByLength.add(ItemVector(key, updatedValue))
