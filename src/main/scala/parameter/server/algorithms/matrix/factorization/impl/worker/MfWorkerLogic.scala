@@ -21,9 +21,9 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
   lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
   lazy val SGDUpdater = new SGDUpdater(learningRate)
 
-  val model = new ItemModel(learningRate, negativeSampleRate, numFactors, rangeMin, rangeMax, bucketSize, workerK, pruningStrategy)
+  lazy val model = new ItemModel(learningRate, negativeSampleRate, numFactors, rangeMin, rangeMax, bucketSize, workerK, pruningStrategy)
 
-  val requestBuffer = new mutable.HashMap[Long, EvaluationRequest]()
+  lazy val requestBuffer = new mutable.HashMap[Long, EvaluationRequest]()
 
 
 
