@@ -29,6 +29,8 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
     */
   private val itemIdsDescendingByLength = new mutable.TreeSet[ItemVector]()
 
+  private def getItemIdsDescendingByLength = itemIdsDescendingByLength
+
   private var ids: Set[ItemId] = Set()
 
   //TODO Check logic
@@ -160,7 +162,7 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
 
 
   /**
-    * Update the vector of the geiven id using the update function and the new value
+    * Update the vector of the given id using the update function and the new value
     * @param key
     * @param newValue
     */
@@ -169,7 +171,7 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
   }
 
   /**
-    * Returns the vector for the given id, or generates a new one if there ie none
+    * Returns the vector for the given id, or generates a new one if there is none
     * @param key
     * @return
     */
@@ -178,17 +180,14 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
       case Some(vector) => vector
       case None =>
         val initialVector = initFunction(key)
-
-        ids = ids + key
-        model.update(key, initialVector)
-        itemIdsDescendingByLength.add(ItemVector(key, initialVector))
+        set(key, initialVector)
 
         initialVector
     }
   }
 
   /**
-    * Returns the corresponding the value, if it doesn't exist, then init
+    * Returns the corresponding value, if it doesn't exist, then None
     *
     * @param key
     * @return
@@ -212,17 +211,17 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
       case None =>
         model.update(key, newValue)
         itemIdsDescendingByLength.add(ItemVector(key, newValue))
+        ids = ids + key
     }
   }
 
-  //TODO tests
   /**
     * Remove the previous length for the given id, and add the new one
     * @param key
     * @param updatedValue
     * @param oldValue
     */
-  def updateItemIdsByLength(key: ItemId, updatedValue: Vector, oldValue: Vector): Unit = {
+  private def updateItemIdsByLength(key: ItemId, updatedValue: Vector, oldValue: Vector): Unit = {
     itemIdsDescendingByLength.remove(ItemVector(key, oldValue))
     itemIdsDescendingByLength.add(ItemVector(key, updatedValue))
   }
