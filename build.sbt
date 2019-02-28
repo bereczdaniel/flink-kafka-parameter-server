@@ -49,20 +49,25 @@ lazy val breezeDependencies = Seq(
 )
 
 lazy val redisDependencies = Seq(
-  "com.github.scredis" %% "scredis" % "2.2.3",    // https://github.com/scredis/scredis
-  "com.typesafe.akka" %% "akka-actor" % "2.5.17",
-  "com.typesafe.akka" %% "akka-remote" % "2.5.17",
-  "com.typesafe.akka" %% "akka-protobuf" % "2.5.17",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.5.17",
-  "com.typesafe.akka" %% "akka-stream" % "2.5.17"
+  "com.github.scredis" %% "scredis" % "2.2.3"//,    // https://github.com/scredis/scredis
+  //"com.typesafe.akka" %% "akka-actor" % "2.5.17",
+  //"com.typesafe.akka" %% "akka-remote" % "2.5.17",
+  //"com.typesafe.akka" %% "akka-protobuf" % "2.5.17",
+  //"com.typesafe.akka" %% "akka-slf4j" % "2.5.17",
+  //"com.typesafe.akka" %% "akka-stream" % "2.5.17"
+)
+
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("akka.**" -> "akka_shade.@1")
+      .inAll
 )
 
 lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies ++= flinkDependencies.map(_ % "provided"), // for flink submission
-    //libraryDependencies ++= flinkDependencies.map(_ % "compile"),    // for standalone running
+    //libraryDependencies ++= flinkDependencies.map(_ % "provided"), // for flink submission
+    libraryDependencies ++= flinkDependencies.map(_ % "compile"),    // for standalone running
     libraryDependencies ++= flinkKafkaDependencies,
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
@@ -77,4 +82,3 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.11.7",
   test in assembly := {}
 )
-
