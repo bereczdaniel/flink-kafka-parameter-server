@@ -13,7 +13,7 @@ import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.algorithms.matrix.factorization.Types.Recommendation
 import parameter.server.communication.Messages._
-import parameter.server.utils.{IDGenerator, Utils}
+import parameter.server.utils.Utils
 import parameter.server.utils.datastreamlogger.{DbWriterFactory, JobLogger}
 
 class OnlineTrainAndEval extends Serializable {
@@ -102,8 +102,8 @@ class OnlineTrainAndEval extends Serializable {
       .readTextFile(fileName) // "lastFM/sliced/first_10_idx"
       .map(line => {
         val fields = line.split(",")
-//        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
-        EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
+        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
+//        EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
       })
 
 
@@ -124,13 +124,18 @@ class OnlineTrainAndEval extends Serializable {
                            elements: Iterable[EvaluationOutput],
                            out: Collector[Recommendation]): Unit = {
 
-        val target = elements.map(_.itemId).max
-        val topK = elements.flatMap(_.topK).toList.sortBy(_.score).distinct.takeRight(K).map(_.itemId)
-        val id = elements.head.evaluationId
-        val ts = elements.map(_.ts).max
-        out.collect(Recommendation(target, topK, id, ts))
+        out.collect(mergeLogic(elements, K))
       }
     })
+
+  //TODO move to another package?
+  def mergeLogic(elements: Iterable[EvaluationOutput], K: Int): Recommendation = {
+    val target = elements.map(_.itemId).max
+    val topK = elements.flatMap(_.topK).toList.sortBy(_.score).distinct.takeRight(K).map(_.itemId)
+    val id = elements.head.evaluationId
+    val ts = elements.map(_.ts).max
+    Recommendation(target, topK, id, ts)
+  }
 
   private def eval(recommendations: DataStream[Recommendation]): DataStream[Result] =
     recommendations
