@@ -40,7 +40,7 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
     * @param pruning
     * @return
     */
-  def generateFocusSet(userVector: Vector, pruning: LEMPPruningStrategy): (Int, Array[Int]) = {
+  private def generateFocusSet(userVector: Vector, pruning: LEMPPruningStrategy): (Int, Array[Int]) = {
     val focus = ((1 until userVector.value.length) :\ 0) { (i, f) =>
       if (userVector.value(i) * userVector.value(i) > userVector.value(f) * userVector.value(f))
         i
@@ -70,7 +70,7 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
     * @param userVector
     * @return
     */
-  def pruneCandidateSet(topK: TopK, currentBucket: List[ItemVector], pruning: LEMPPruningStrategy,
+  private def pruneCandidateSet(topK: TopK, currentBucket: List[ItemVector], pruning: LEMPPruningStrategy,
                         focus: ItemId, focusSet: Array[ItemId], userVector: Vector): List[ItemVector] = {
     val theta = if (topK.length < K) 0.0 else topK.head.score
     val theta_b_q = theta / (currentBucket.head.vector.length * userVector.length)
@@ -160,32 +160,6 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
   override def keys: Array[ItemId] =
     ids.toArray
 
-
-  /**
-    * Update the vector of the given id using the update function and the new value
-    * @param key
-    * @param newValue
-    */
-  override def updateWith(key: ItemId, newValue: Vector): Unit = {
-    super.updateWith(key, newValue)
-  }
-
-  /**
-    * Returns the vector for the given id, or generates a new one if there is none
-    * @param key
-    * @return
-    */
-  override def getOrElseInit(key: ItemId): Vector = {
-    get(key) match {
-      case Some(vector) => vector
-      case None =>
-        val initialVector = initFunction(key)
-        set(key, initialVector)
-
-        initialVector
-    }
-  }
-
   /**
     * Returns the corresponding value, if it doesn't exist, then None
     *
@@ -201,18 +175,14 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
     * @param key
     * @param newValue
     */
-  override def set(key: ItemId, newValue: Vector): Unit = {
-    model.get(key) match {
-
-      case Some(oldValue) =>
-        model.update(key, newValue)
-        updateItemIdsByLength(key, newValue, oldValue)
-
-      case None =>
-        model.update(key, newValue)
-        itemIdsDescendingByLength.add(ItemVector(key, newValue))
-        ids = ids + key
-    }
+  override def set(key: ItemId, newValue: Vector): Unit = model.get(key) match {
+    case Some(oldValue) =>
+      model.update(key, newValue)
+      updateItemIdsByLength(key, newValue, oldValue)
+    case None =>
+      model.update(key, newValue)
+      itemIdsDescendingByLength.add(ItemVector(key, newValue))
+      ids = ids + key
   }
 
   /**
