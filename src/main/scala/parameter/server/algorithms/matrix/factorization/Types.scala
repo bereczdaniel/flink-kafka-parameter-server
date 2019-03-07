@@ -17,7 +17,7 @@ object Types {
     */
   case class ItemVector(id: ItemId, vector: Vector) extends Ordered[ItemVector] {
     self =>
-    override def compare(that: ItemVector): UserId =
+    override def compare(that: ItemVector): Int =
       if(self.vector.length == that.vector.length)
         self.id compare that.id
       else

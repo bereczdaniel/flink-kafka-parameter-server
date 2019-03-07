@@ -24,7 +24,7 @@ abstract class ModelState[K,P]() {
   def keys: Array[K]
 
   /**
-    * Returns the corresponding the value, if it doesn't exist, then init
+    * Returns the corresponding value, if it doesn't exist, then None
     * @param key
     * @return
     */
@@ -37,6 +37,7 @@ abstract class ModelState[K,P]() {
     */
   def set(key: K, newValue: P): Unit
 
+  // TODO: double initializing. getOrElseInit add key to model redundantly.
   /**
     * Update the existing value with the newValue using the updateFunction. If there is no original value, one will be
     * initialized and used as original.
