@@ -15,8 +15,10 @@ class LEMPTest extends FlatSpec with PropertyChecks with Matchers with PrivateMe
   lazy val numFactorsDefault = 10
   lazy val rangeMinDefault : Double = -0.01
   lazy val rangeMaxDefault : Double = 0.01
-  lazy val bucketSizeDefault = 100
-  lazy val KDefault  = 5
+//  lazy val rangeMinDefault : Double = -1
+//  lazy val rangeMaxDefault : Double = 1
+  lazy val bucketSizeDefault = 10
+  lazy val KDefault  = 20
   lazy val pruningStrategyDefault  = LI(5, 2.5)
 
   def generateRandomNumbers(n: Int): Iterable[Int] =
@@ -109,32 +111,46 @@ class LEMPTest extends FlatSpec with PropertyChecks with Matchers with PrivateMe
     lemp.keys.head shouldBe 0
   }
 
+  "LEMP dropping bucket" should "work" in {
+    val lemp = new LEMP(1, rangeMinDefault, rangeMaxDefault, 1, 1, pruningStrategyDefault)
+    val query = lemp.initFunction(Random.nextInt())
+    val vectors: List[(Int, Vector)] = List((0, Vector(Array(8d))), (1, Vector(Array(0.5))), (2, Vector(Array(2d))))
+    vectors.foreach(v => lemp.set(v._1, v._2))
+    val topK = vectors.map(x => (x._1, Vector.dotProduct(x._2, query))).sortBy(-_._2).take(1)
+    val results = lemp.generateTopK(query).toList.sortBy(-_.score)
+    results.map(_.itemId) == topK.map(_._1) shouldBe true
+  }
+
 //  "update ids by length" should "stay the size of the array the same" in {
 //
 //  }
 
-//  "generate top K" should "give back the top k most similar vectors" in {
-//
-//    val x = (1 to 100) map ( _ => {
+  "generate top K" should "give back the top k most similar vectors" in {
+
+    val x = (1 to 10000) map ( _ => {
+      // TODO numfactors > 1 and pruneCandidateSet function case error. It is nedde to be fixed!
 //      val lemp = new LEMP(numFactorsDefault, rangeMinDefault, rangeMaxDefault, bucketSizeDefault, KDefault, pruningStrategyDefault)
-//      val query = lemp.initFunction(Random.nextInt())
-//      val vectors: List[(Vector, Int)] = generateRandomNumbers(100).map(s => (lemp.initFunction(s), s)).toList
-//
-//      vectors.foreach(v => lemp.set(v._2, v._1))
-//
-//      val topK = vectors.map(x => (Vector.dotProduct(x._1, query), x._2)).sortBy(-_._1).take(KDefault)
-//      val results = lemp.generateTopK(query).toList.sortBy(-_.score)
-//
-//      results.map(_.itemId) == topK.map(_._2)
-//    })
-//
-//    x.forall(p => p) shouldBe true
-//  }
+      val lemp = new LEMP(1, rangeMinDefault, rangeMaxDefault, bucketSizeDefault, KDefault, pruningStrategyDefault)
+      val query = lemp.initFunction(Random.nextInt())
+      val vectors: List[(Vector, Int)] = generateRandomNumbers(100).map(s => (lemp.initFunction(s), s)).toList
+
+      vectors.foreach(v => lemp.set(v._2, v._1))
+
+      val topK = vectors.map(x => (Vector.dotProduct(x._1, query), x._2)).sortBy(-_._1).take(KDefault)
+      val results = lemp.generateTopK(query).toList.sortBy(-_.score)
+
+      results.map(_.itemId) == topK.map(_._2)
+    })
+
+    x.forall(p => p) shouldBe true
+  }
 
 //  "generate top K" should "give back the top k most similar vectors" in {
 //
-//    val x = (1 to 100) map ( _ => {
-//      val lemp = new LEMP(numFactorsDefault, rangeMinDefault, rangeMaxDefault, bucketSizeDefault, KDefault, pruningStrategyDefault)
+//    val x = (1 to 10000) map ( _ => {
+////    val x = (1 to 1) map ( _ => {
+////      val lemp = new LEMP(numFactorsDefault, rangeMinDefault, rangeMaxDefault, bucketSizeDefault, KDefault, pruningStrategyDefault)
+//      val lemp = new LEMP(numFactorsDefault, -1, 1, bucketSizeDefault, KDefault, pruningStrategyDefault)
 //      val query = lemp.initFunction(Random.nextInt())
 //
 //      val vectors: List[(Vector, Int)] = generateRandomNumbers(100).map(s => (lemp.initFunction(s), s)).toList
@@ -142,16 +158,17 @@ class LEMPTest extends FlatSpec with PropertyChecks with Matchers with PrivateMe
 //      vectors.foreach(v => lemp.set(v._2, v._1))
 //
 //      val topK = vectors.map(x => (Vector.dotProduct(x._1, query), x._2)).sortBy(-_._1).take(KDefault)
+////      println(topK)
 //      val results = lemp.generateTopK(query).toList.sortBy(-_.score)
 //
 //      val q = (results.map(_.itemId) == topK.map(_._2), topK,results, vectors.map(x => (x._2, Vector.dotProduct(x._1, query))))
 //      if (!q._1) {
-//        print("asd")
+////        print("asd")
 //      }
 //      q
 //    })
 //
-//   val bad = x.filter(_._1 == false)
+//   val bad = x.filter(_._1 == false).map(x => (x._2.toSeq, x._3.toSeq, x._4.toSeq))
 //
 //    print("asd")
 //    //x.forall(p => p) shouldBe true
