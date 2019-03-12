@@ -1,10 +1,10 @@
-package parameter.server.algorithms.matrix.factorization
+package parameter.server.algorithms.matrix.factorization.impl
 
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers, PrivateMethodTester}
+import parameter.server.algorithms.matrix.factorization.Types
 import parameter.server.algorithms.matrix.factorization.Types.ItemVector
-import parameter.server.algorithms.matrix.factorization.impl.LEMP
-import parameter.server.algorithms.pruning.{LEMPPruningStrategy, LI}
+import parameter.server.algorithms.pruning.LI
 import parameter.server.utils.Vector
 
 import scala.collection.mutable

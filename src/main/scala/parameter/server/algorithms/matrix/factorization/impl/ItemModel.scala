@@ -48,6 +48,9 @@ class ItemModel(learningRate: Double, negativeSampleRate: Int, numFactors: Int,
   def set(itemId: ItemId, param: Vector): Unit =
     model.set(itemId, param)
 
+
+  // TODO: why is itemId option?
+  // TODO: Random.nextInt(possibleNegativeItems.length) could be redundant!
   //TODO check performance of conversion between Array[Double] and Vector
   //TODO tests
   def calculateNegativeSamples(itemId: Option[ItemId], userVector: Vector): Vector = {
