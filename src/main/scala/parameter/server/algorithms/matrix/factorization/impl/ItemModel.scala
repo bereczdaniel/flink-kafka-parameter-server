@@ -49,10 +49,6 @@ class ItemModel(learningRate: Double, negativeSampleRate: Int, numFactors: Int,
     model.set(itemId, param)
 
 
-  // TODO: why is itemId option?
-  // TODO: Random.nextInt(possibleNegativeItems.length) could be redundant!
-  //TODO check performance of conversion between Array[Double] and Vector
-  //TODO tests
   def calculateNegativeSamples(itemId: Option[ItemId], userVector: Vector): Vector = {
     val possibleNegativeItems =
       itemId match {
@@ -60,9 +56,8 @@ class ItemModel(learningRate: Double, negativeSampleRate: Int, numFactors: Int,
         case None     => model.keys
       }
 
-    (0 until  math.min(negativeSampleRate, possibleNegativeItems.length))
-      .foldLeft(Vector(numFactors))((vector, _) => {
-        val negItemId = possibleNegativeItems(Random.nextInt(possibleNegativeItems.length))
+    Random.shuffle(possibleNegativeItems.toList).take(negativeSampleRate)
+      .foldLeft(Vector(numFactors))((vector, negItemId) => {
         val negItemVector = model(negItemId)
 
         val (userDelta, itemDelta) = SGDUpdater.delta(0.0, userVector.value, negItemVector.value)

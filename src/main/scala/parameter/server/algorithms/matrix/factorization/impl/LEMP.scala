@@ -33,7 +33,6 @@ class LEMP(numFactors: Int, rangeMin: Double, rangeMax: Double, bucketSize: Int,
 
   private var ids: Set[ItemId] = Set()
 
-  //TODO Check logic
   /**
     * LEMP algo, tests later
     * @param userVector
