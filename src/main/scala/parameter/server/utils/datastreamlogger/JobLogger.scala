@@ -14,9 +14,16 @@ object JobLogger {
                                             getIdFromOutputMessage: T => Long
                          ): DataStream[T] = {
     import scala.collection.JavaConverters._
-    env.getConfig.setGlobalJobParameters(ParameterTool.fromMap(Map("testProcessId" -> DataStreamLoggerMap.getCurrentTimestamp.toString).asJava))
+    env
+      .getConfig
+      .setGlobalJobParameters(
+        ParameterTool
+          .fromMap(
+            Map("testProcessId" -> DataStreamLoggerMap.getCurrentTimestamp.toString).asJava))
+
     runJob(inputStream.map(new DataStreamLoggerMap[S](dbw, getIdFromInputMessage, "input", testProcessCategory)), env)
-      .forward.map(new DataStreamLoggerMap[T](dbw, getIdFromOutputMessage, "output", testProcessCategory))
+      .forward
+      .map(new DataStreamLoggerMap[T](dbw, getIdFromOutputMessage, "output", testProcessCategory))
   }
 
 }

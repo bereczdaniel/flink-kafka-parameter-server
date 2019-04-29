@@ -35,7 +35,7 @@ class CouchBaseWriter(username: String, passworld: String, bucketname: String, n
       .put("run_id", d.constFields.testProcessId)
       .put("proc_phase", d.constFields.processStage))
 
-  override def writeToDb(d: LogDataStruct): Unit = {
+    override def writeToDb(d: LogDataStruct): Unit = {
     bucket.async.insert(convertLogDataStructToJson(d))
         .subscribe(new Action1[JsonDocument] {
             override def call(t: JsonDocument): Unit = writeCounter += 1
@@ -56,6 +56,7 @@ object CouchBaseWriter {
 
   def main(args: Array[String]): Unit = {
     val cw = new CouchBaseWriter("admin", "admin123", "asynctest", "localhost")
+    cw.open
     (0 until 100).map(
       LogDataStruct.createFromMessage[Long](_, x=>x, DataStreamLoggerMap.getCurrentTimestamp,
         LogDataConstFields("input", 456, "kafka")))

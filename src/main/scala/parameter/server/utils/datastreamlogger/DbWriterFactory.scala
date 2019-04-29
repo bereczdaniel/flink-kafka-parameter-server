@@ -1,7 +1,7 @@
 package parameter.server.utils.datastreamlogger
 
 import org.apache.flink.api.java.utils.ParameterTool
-import parameter.server.utils.datastreamlogger.impl.{ConsoleWriter, CouchBaseWriter}
+import parameter.server.utils.datastreamlogger.impl.{ConsoleWriter, CouchBaseWriter, KafkaWriter}
 
 object DbWriterFactory {
 
@@ -12,6 +12,7 @@ object DbWriterFactory {
   def createDbWriter(dbBackend: String, parameters: ParameterTool): DbWriter = dbBackend match {
     case "couchbase" => CouchBaseWriter.createFromParameters(parameters)
     case "console" => new ConsoleWriter
+    case "kafka" => KafkaWriter.createFromParameters(parameters)
     case "postgresql" =>
       // TODO
       throw new UnsupportedOperationException
