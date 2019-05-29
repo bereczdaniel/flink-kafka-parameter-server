@@ -9,7 +9,11 @@ package parameter.server.utils.datastreamlogger
 sealed case class LogDataStruct(
     observationId: Long,
     timestamp: Long,
-    constFields: LogDataConstFields) {}
+    constFields: LogDataConstFields) {
+
+  override def toString: String =
+    s"$observationId,$timestamp,$constFields"
+}
 
 object LogDataStruct {
 

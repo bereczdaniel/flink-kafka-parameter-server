@@ -9,4 +9,8 @@ package parameter.server.utils.datastreamlogger
 sealed case class LogDataConstFields(
   processStage: String,
   testProcessId: Long,
-  testProcessCategory: String) {}
+  testProcessCategory: String) {
+
+  override def toString: String =
+    s"$processStage,$testProcessId,$testProcessCategory"
+}

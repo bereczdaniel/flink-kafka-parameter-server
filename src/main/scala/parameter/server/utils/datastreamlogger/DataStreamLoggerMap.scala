@@ -11,7 +11,6 @@ import org.apache.flink.streaming.api.scala._
   * and puts a log for each one into the db with the current timestamp
   * @param dbWriter            The writer implementation that actually stores the data in the db
   * @param getIdFromMessage    A function to query the data element id in the stream (a.k.a. observationId) from the message
-  * @param logDataConstFields  The constant data fields for this logging procedure
   * @tparam M
   */
 class DataStreamLoggerMap[M](
@@ -38,6 +37,6 @@ class DataStreamLoggerMap[M](
 
 object DataStreamLoggerMap {
   def getCurrentTimestamp: Long = {
-    System.nanoTime() / 1000000 // millisec? - thr precision may be modified
+    System.currentTimeMillis() // millisec? - thr precision may be modified
   }
 }
