@@ -1,5 +1,6 @@
 package parameter.server.algorithms.matrix.factorization
 
+import org.apache.flink.streaming.api.scala._
 import parameter.server.algorithms.matrix.factorization.Types.{ItemId, Prediction, UserId}
 import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Vector
@@ -27,6 +28,11 @@ object RecSysMessages {
     val id :: params = line.split(",").toList
     ItemParameter(id.toInt, Vector(params.map(_.toDouble).toArray))
   }
+
+  def readModel(env: StreamExecutionEnvironment, fileName: String, parse: String => WorkerInput): DataStream[WorkerInput] =
+    env
+      .readTextFile(fileName)
+      .map(parse)
 
 
   case class EvaluationOutput(itemId: Int, evaluationId: Long, topK: List[Prediction], ts: Long) extends ParameterServerOutput

@@ -12,5 +12,5 @@ sealed case class LogDataConstFields(
   testProcessCategory: String) {
 
   override def toString: String =
-    s"$processStage, $testProcessId, $testProcessCategory"
+    s"$processStage,$testProcessId,$testProcessCategory"
 }

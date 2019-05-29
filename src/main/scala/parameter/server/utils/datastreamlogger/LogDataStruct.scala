@@ -12,7 +12,7 @@ sealed case class LogDataStruct(
     constFields: LogDataConstFields) {
 
   override def toString: String =
-    s"$observationId, $timestamp, $constFields"
+    s"$observationId,$timestamp,$constFields"
 }
 
 object LogDataStruct {
