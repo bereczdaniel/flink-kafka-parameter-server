@@ -1,25 +1,21 @@
 package parameter.server.algorithms.matrix.factorization.impl.worker
 
+import LEMP.{LI, PruningStrategy}
+import model.ItemModel
+import types.Vector
 import org.apache.flink.util.Collector
-import parameter.server.algorithms.factors.{RangedRandomFactorInitializerDescriptor, SGDUpdater}
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
-import parameter.server.algorithms.matrix.factorization.impl.ItemModel
-import parameter.server.algorithms.pruning._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Pull, Push}
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.ParameterServerOutput
-import parameter.server.utils.Vector
 
 import scala.collection.mutable
 
 class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
                     rangeMin: Double, rangeMax: Double,
-                    workerK: Int, bucketSize: Int, pruningStrategy: LEMPPruningStrategy = LI(5, 2.5))
+                    workerK: Int, bucketSize: Int, pruningStrategy: PruningStrategy = LI(5, 2.5))
   extends WorkerLogic[Long, Int, EvaluationRequest, Vector]{
-
-  lazy val factorInitDesc = RangedRandomFactorInitializerDescriptor(numFactors, rangeMin, rangeMax)
-  lazy val SGDUpdater = new SGDUpdater(learningRate)
 
   lazy val model = new ItemModel(learningRate, negativeSampleRate, numFactors, rangeMin, rangeMax, bucketSize, workerK, pruningStrategy)
 

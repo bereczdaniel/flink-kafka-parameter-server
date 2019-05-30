@@ -61,14 +61,12 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies ++= flinkDependencies.map(_ % "provided"), // for flink submission
-    //libraryDependencies ++= flinkDependencies.map(_ % "compile"),    // for standalone running
+    libraryDependencies ++= flinkDependencies.map(_ % "provided"), 
     libraryDependencies ++= flinkKafkaDependencies,
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
-    libraryDependencies ++= redisDependencies
-    //libraryDependencies ++= Seq(
-    //)
+    libraryDependencies ++= redisDependencies,
+    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/matrix-factorization_2.11-0.1.jar"
   )
 
 lazy val commonSettings = Seq(

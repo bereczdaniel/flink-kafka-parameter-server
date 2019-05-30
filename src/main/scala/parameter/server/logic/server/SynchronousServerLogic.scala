@@ -4,7 +4,8 @@ import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, ValueS
 import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput}
+import parameter.server.utils.Types.ParameterServerOutput
+import types.Parameter
 
 abstract class SynchronousServerLogic[WK, SK, P <: Parameter]
   extends ServerLogic[WK, SK, P] {

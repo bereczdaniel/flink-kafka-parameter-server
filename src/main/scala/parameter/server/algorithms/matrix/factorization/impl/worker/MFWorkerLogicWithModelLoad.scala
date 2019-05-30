@@ -5,8 +5,9 @@ import parameter.server.algorithms.matrix.factorization.RecSysMessages._
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.Push
 import parameter.server.logic.worker.WorkerLogic
+import parameter.server.utils.Types
 import parameter.server.utils.Types.WorkerInput
-import parameter.server.utils.{Types, Vector}
+import types.Vector
 
 class MFWorkerLogicWithModelLoad(wl: MfWorkerLogic)
   extends WorkerLogic[Long, Int, WorkerInput, Vector] {

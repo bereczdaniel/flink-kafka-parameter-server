@@ -4,6 +4,7 @@ import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 import parameter.server.communication.Messages.Message
 import parameter.server.utils.Types._
+import types.Parameter
 
 abstract class WorkerLogic[WK, SK, T <: WorkerInput, P <: Parameter]
   extends RichCoFlatMapFunction[Message[SK, WK, P], T, Either[ParameterServerOutput, Message[WK, SK, P]]]{

@@ -11,7 +11,8 @@ import parameter.server.CollectSink
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Message, Pull, PullAnswer}
 import parameter.server.logic.server.AsynchronousServerLogic
-import parameter.server.utils.{Types, Vector}
+import parameter.server.utils.Types.ParameterServerOutput
+import types.Vector
 
 class AsynchronousServerLogicTest extends AbstractTestBase with Matchers {
 
@@ -34,15 +35,15 @@ class AsynchronousServerLogicTest extends AbstractTestBase with Matchers {
       .process(new AsynchronousServerLogic[Int, Int, Vector] {
         override val model: ValueState[Vector] = null
 
-        override def onPullReceive(pull: Pull[Int, Int, Vector], out: Collector[Either[Types.ParameterServerOutput, Message[Int, Int, Vector]]]): Unit = {
+        override def onPullReceive(pull: Pull[Int, Int, Vector], out: Collector[Either[ParameterServerOutput, Message[Int, Int, Vector]]]): Unit = {
           val payload: Vector = Vector(Array(pull.dest.toDouble, pull.src.toDouble, math.pow(pull.dest, pull.src)))
           out.collect(Right(PullAnswer(pull.destination, pull.source, payload)))
         }
 
-        override def onPushReceive(push: Messages.Push[Int, Int, Vector], out: Collector[Either[Types.ParameterServerOutput, Message[Int, Int, Vector]]]): Unit = ???
+        override def onPushReceive(push: Messages.Push[Int, Int, Vector], out: Collector[Either[ParameterServerOutput, Message[Int, Int, Vector]]]): Unit = ???
       })
-      .flatMap(new FlatMapFunction[Either[Types.ParameterServerOutput, Message[Int, Int, Vector]], Message[Int, Int, Vector]] {
-        override def flatMap(value: Either[Types.ParameterServerOutput, Message[Int, Int, Vector]], out: Collector[Message[Int, Int, Vector]]): Unit = {
+      .flatMap(new FlatMapFunction[Either[ParameterServerOutput, Message[Int, Int, Vector]], Message[Int, Int, Vector]] {
+        override def flatMap(value: Either[ParameterServerOutput, Message[Int, Int, Vector]], out: Collector[Message[Int, Int, Vector]]): Unit = {
           value match {
             case Left(_) =>
             case Right(msg) => out.collect(msg)

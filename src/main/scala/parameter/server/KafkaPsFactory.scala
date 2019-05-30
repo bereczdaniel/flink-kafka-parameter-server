@@ -8,7 +8,8 @@ import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, Flink
 import parameter.server.communication.Messages.Message
 import parameter.server.logic.server.ServerLogic
 import parameter.server.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, WorkerInput}
+import parameter.server.utils.Types.WorkerInput
+import types.Parameter
 
 
 /**

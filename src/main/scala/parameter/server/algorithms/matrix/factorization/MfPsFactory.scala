@@ -1,8 +1,8 @@
 package parameter.server.algorithms.matrix.factorization
+import initializer.RangedRandomFactorInitializerDescriptor
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import parameter.server.ParameterServerSkeleton
-import parameter.server.algorithms.factors.RangedRandomFactorInitializerDescriptor
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
 import parameter.server.algorithms.matrix.factorization.impl.{KafkaMfPsFactory, KafkaRedisMfPsFactory, RedisMfPsFactory}
 

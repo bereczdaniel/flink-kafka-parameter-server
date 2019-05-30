@@ -11,10 +11,10 @@ import org.apache.flink.util.Collector
 import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
-import parameter.server.algorithms.matrix.factorization.Types.Recommendation
 import parameter.server.communication.Messages._
 import parameter.server.utils.Utils
 import parameter.server.utils.datastreamlogger.{DbWriterFactory, JobLogger}
+import types.Recommendation
 
 class OnlineTrainAndEval extends Serializable {
 

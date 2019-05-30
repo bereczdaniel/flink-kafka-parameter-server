@@ -3,7 +3,7 @@ package parameter.server.algorithms.matrix.factorization
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.prop.PropertyChecks
 import parameter.server.algorithms.matrix.factorization.RecSysMessages._
-import parameter.server.utils.Vector
+import types.Vector
 
 class RecSysMessagesTest extends FlatSpec with PropertyChecks with Matchers {
 

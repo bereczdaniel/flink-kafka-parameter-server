@@ -1,6 +1,6 @@
 package parameter.server.algorithms
 
-import parameter.server.algorithms.matrix.factorization.Types.ItemId
+import types.ItemId
 
 object Metrics {
 
@@ -29,5 +29,4 @@ object Metrics {
 
   def nDCG(topK: List[ItemId], targets: List[ItemId]): Double =
     dcg(topK, targets) / IDCG(targets, topK.size)
-
 }

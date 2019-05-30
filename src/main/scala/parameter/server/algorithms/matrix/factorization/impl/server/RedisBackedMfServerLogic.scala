@@ -2,11 +2,11 @@ package parameter.server.algorithms.matrix.factorization.impl.server
 
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
-import parameter.server.algorithms.matrix.factorization.Types.ItemId
+import types.{ItemId, Vector}
 import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
 import parameter.server.logic.server.AsynchronousServerLogic
-import parameter.server.utils.{Types, Vector}
+import parameter.server.utils.Types
 import scredis.{RedisCluster, Server}
 
 class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,

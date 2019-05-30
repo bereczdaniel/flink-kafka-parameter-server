@@ -1,6 +1,6 @@
 package parameter.server.communication
 
-import parameter.server.utils.Types.Parameter
+import types.Parameter
 
 object Messages {
 

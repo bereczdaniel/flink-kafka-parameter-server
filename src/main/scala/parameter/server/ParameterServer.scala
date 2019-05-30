@@ -6,8 +6,9 @@ import org.apache.flink.streaming.api.scala._
 import parameter.server.communication.Messages.Message
 import parameter.server.logic.server.ServerLogic
 import parameter.server.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{Parameter, ParameterServerOutput, WorkerInput}
+import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Utils
+import types.Parameter
 
 
 /**

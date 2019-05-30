@@ -10,7 +10,8 @@ import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Message, Pull, PullAnswer, Push}
 import parameter.server.logic.AsynchronousServerLogicTest._
 import parameter.server.logic.server.AsynchronousServerLogic
-import parameter.server.utils.{Types, Utils, Vector}
+import parameter.server.utils.{Types, Utils}
+import types.Vector
 
 class AsynchronousServerLogicTest extends FlatSpec with Matchers {
 
