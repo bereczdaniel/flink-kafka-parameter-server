@@ -32,5 +32,4 @@ class VectorTest extends FlatSpec with PropertyChecks with Matchers {
 
     assertThrows[FactorIsNotANumberException](Vector.vectorSum(posInf, negInf))
   }
-
 }

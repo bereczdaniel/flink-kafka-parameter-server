@@ -66,7 +66,8 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
     libraryDependencies ++= redisDependencies,
-    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/matrix-factorization_2.11-0.1.jar"
+    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/matrix-factorization_2.11-0.1.jar",
+    libraryDependencies += "hu.sztaki.ilab" % "data-stream-logger" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/data-stream-logger_2.11-0.1.jar"
   )
 
 lazy val commonSettings = Seq(
