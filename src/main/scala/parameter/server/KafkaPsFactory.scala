@@ -9,7 +9,7 @@ import parameter.server.communication.Messages.Message
 import parameter.server.logic.server.ServerLogic
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.WorkerInput
-import types.Parameter
+import matrix.factorization.types.Parameter
 
 
 /**

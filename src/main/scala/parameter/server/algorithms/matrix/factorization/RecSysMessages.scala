@@ -2,7 +2,7 @@ package parameter.server.algorithms.matrix.factorization
 
 import org.apache.flink.streaming.api.scala._
 import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
-import types.{ItemId, Prediction, UserId, Vector}
+import matrix.factorization.types.{ItemId, Prediction, UserId, Vector}
 
 object RecSysMessages {
 

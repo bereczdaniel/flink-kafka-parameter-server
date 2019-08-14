@@ -1,6 +1,6 @@
 package parameter.server.algorithms.matrix.factorization.impl
 
-import initializer.RangedRandomFactorInitializerDescriptor
+import matrix.factorization.initializer.RangedRandomFactorInitializerDescriptor
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
@@ -8,7 +8,7 @@ import parameter.server.algorithms.matrix.factorization.impl.server.StateBackedM
 import parameter.server.algorithms.matrix.factorization.impl.worker.MfWorkerLogic
 import parameter.server.algorithms.matrix.factorization.{GeneralMfProperties, MessageParsers, MfPsFactory}
 import parameter.server.{KafkaPsFactory, ParameterServerSkeleton}
-import types.Vector
+import matrix.factorization.types.Vector
 
 class KafkaMfPsFactory extends MfPsFactory {
 

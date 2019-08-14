@@ -1,6 +1,6 @@
 package parameter.server.communication
 
-import types.Parameter
+import matrix.factorization.types.Parameter
 
 object Messages {
 

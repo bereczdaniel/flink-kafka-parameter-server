@@ -1,8 +1,8 @@
 package parameter.server.logic.worker
 
-import model.ModelState
+import matrix.factorization.model.ModelState
 import parameter.server.utils.Types.WorkerInput
-import types.Parameter
+import matrix.factorization.types.Parameter
 
 abstract class WorkerLogicWithModel[WK, SK, T <: WorkerInput, P <: Parameter]
   extends WorkerLogic[WK, SK, T, P] {

@@ -3,7 +3,7 @@ package parameter.server
 import org.apache.flink.streaming.api.functions.sink.SinkFunction
 import parameter.server.communication.Messages.Message
 import parameter.server.utils.Types
-import types.Vector
+import matrix.factorization.types.Vector
 
 import scala.collection.mutable.ArrayBuffer
 

@@ -8,7 +8,7 @@ import parameter.server.logic.server.ServerLogic
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
 import parameter.server.utils.Utils
-import types.Parameter
+import matrix.factorization.types.Parameter
 
 
 /**

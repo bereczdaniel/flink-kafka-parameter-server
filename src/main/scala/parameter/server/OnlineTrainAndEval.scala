@@ -14,7 +14,7 @@ import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
 import parameter.server.utils.Utils
-import types.Recommendation
+import matrix.factorization.types.Recommendation
 
 class OnlineTrainAndEval extends Serializable {
 

@@ -1,7 +1,7 @@
 package parameter.server.algorithms.matrix.factorization
 
 import parameter.server.communication.Messages._
-import types.Vector
+import matrix.factorization.types.Vector
 
 object MessageParsers {
   

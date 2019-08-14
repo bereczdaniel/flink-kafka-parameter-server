@@ -12,7 +12,7 @@ import parameter.server.communication.Messages
 import parameter.server.communication.Messages.{Message, Pull, PullAnswer}
 import parameter.server.logic.server.AsynchronousServerLogic
 import parameter.server.utils.Types.ParameterServerOutput
-import types.Vector
+import matrix.factorization.types.Vector
 
 class AsynchronousServerLogicTest extends AbstractTestBase with Matchers {
 

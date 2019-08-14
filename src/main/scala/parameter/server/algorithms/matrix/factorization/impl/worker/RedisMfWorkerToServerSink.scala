@@ -3,7 +3,7 @@ package parameter.server.algorithms.matrix.factorization.impl.worker
 import parameter.server.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
 import parameter.server.utils.Utils
 import parameter.server.utils.connectors.redis.AbstractRedisSink
-import types.Vector
+import matrix.factorization.types.Vector
 import scredis.protocol.Decoder
 import scredis.serialization._
 

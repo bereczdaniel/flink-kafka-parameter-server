@@ -1,6 +1,8 @@
 package parameter.server.algorithms
 
-import types.ItemId
+//Naming conflict between packages: matrix.factorization is a subpackage here as well as a root package from an imported module.
+//The local subpackage overloads the root package reference. We must use explicit absolute package path starting from _root_:
+import _root_.matrix.factorization.types.ItemId
 
 object Metrics {
 

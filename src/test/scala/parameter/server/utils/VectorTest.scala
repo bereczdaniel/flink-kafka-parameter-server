@@ -2,8 +2,8 @@ package parameter.server.utils
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.prop.PropertyChecks
-import types.Vector
-import types.Vector.FactorIsNotANumberException
+import matrix.factorization.types.Vector
+import matrix.factorization.types.Vector.FactorIsNotANumberException
 
 class VectorTest extends FlatSpec with PropertyChecks with Matchers {
   val v1 = new Vector(Array(1,2,3,4))
