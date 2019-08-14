@@ -1,6 +1,7 @@
 package parameter.server
 
 import data.stream.logger.{DbWriterFactory, JobLogger}
+import matrix.factorization.types.Recommendation
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.core.fs.FileSystem
 import org.apache.flink.streaming.api.scala._
@@ -14,7 +15,6 @@ import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
 import parameter.server.utils.Utils
-import types.Recommendation
 
 class OnlineTrainAndEval extends Serializable {
 

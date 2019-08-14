@@ -6,7 +6,7 @@ import parameter.server.communication.Messages
 import parameter.server.communication.Messages.PullAnswer
 import parameter.server.logic.server.AsynchronousServerLogic
 import parameter.server.utils.Types
-import types.{Vector, ItemId}
+import matrix.factorization.types.{Vector, ItemId}
 
 class StateBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector)
   extends AsynchronousServerLogic[Long, Int, Vector] {

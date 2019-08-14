@@ -1,7 +1,7 @@
 package parameter.server.algorithms.matrix.factorization.impl
 
-import initializer.RangedRandomFactorInitializerDescriptor
-import types.Vector
+import matrix.factorization.initializer.RangedRandomFactorInitializerDescriptor
+import matrix.factorization.types.Vector
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala._
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest

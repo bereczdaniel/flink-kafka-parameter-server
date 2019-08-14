@@ -7,7 +7,7 @@ import parameter.server.communication.Messages.Push
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types
 import parameter.server.utils.Types.WorkerInput
-import types.Vector
+import matrix.factorization.types.Vector
 
 class MFWorkerLogicWithModelLoad(wl: MfWorkerLogic)
   extends WorkerLogic[Long, Int, WorkerInput, Vector] {

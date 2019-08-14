@@ -1,8 +1,8 @@
 package parameter.server.algorithms.matrix.factorization.impl.worker
 
-import LEMP.{LI, PruningStrategy}
-import model.ItemModel
-import types.Vector
+import matrix.factorization.LEMP.{LI, PruningStrategy}
+import matrix.factorization.model.ItemModel
+import matrix.factorization.types.Vector
 import org.apache.flink.util.Collector
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages

@@ -1,8 +1,10 @@
 package parameter.server.algorithms
 
-import types.ItemId
+//import matrix.factorization.types.ItemId
 
 object Metrics {
+
+  type ItemId = scala.Int
 
   def nDCG(topK: List[ItemId], targetItemId: ItemId): Double = {
     val position = topK.indexOf(targetItemId) + 1

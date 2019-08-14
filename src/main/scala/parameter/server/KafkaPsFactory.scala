@@ -2,6 +2,7 @@ package parameter.server
 
 import java.util.Properties
 
+import matrix.factorization.types.Parameter
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
@@ -9,7 +10,6 @@ import parameter.server.communication.Messages.Message
 import parameter.server.logic.server.ServerLogic
 import parameter.server.logic.worker.WorkerLogic
 import parameter.server.utils.Types.WorkerInput
-import types.Parameter
 
 
 /**
