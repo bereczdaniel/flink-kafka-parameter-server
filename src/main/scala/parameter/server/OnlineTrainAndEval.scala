@@ -13,16 +13,10 @@ import parameter.server.algorithms.Metrics
 import parameter.server.algorithms.matrix.factorization.MfPsFactory
 import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
 import parameter.server.communication.Messages._
-import parameter.server.utils.Utils
+import parameter.server.utils.{IDGenerator, Utils}
 import matrix.factorization.types.Recommendation
 
 class OnlineTrainAndEval extends Serializable {
-
-  case class Result(evaluationId: Long, nDCG: Double, timestamp: Long)
-  case class AccumulatedResult(nDCG: Double, timeSlot: Long, count: Int) {
-    override def toString: String =
-      s"$timeSlot,$nDCG,$count"
-  }
 
 
 
@@ -102,8 +96,8 @@ class OnlineTrainAndEval extends Serializable {
       .readTextFile(fileName) // "lastFM/sliced/first_10_idx"
       .map(line => {
         val fields = line.split(",")
-        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
-//        EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
+//        EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
+        EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
       })
 
 
@@ -136,6 +130,8 @@ class OnlineTrainAndEval extends Serializable {
     val ts = elements.map(_.ts).max
     Recommendation(target, topK, id, ts)
   }
+
+  import OnlineTrainAndEval._
 
   private def eval(recommendations: DataStream[Recommendation]): DataStream[Result] =
     recommendations
@@ -177,4 +173,12 @@ object OnlineTrainAndEval {
     val model = new OnlineTrainAndEval()
     model.parameterParseAndRun(args)
   }
+
+  case class Result(evaluationId: Long, nDCG: Double, timestamp: Long)
+
+  case class AccumulatedResult(nDCG: Double, timeSlot: Long, count: Int) {
+    override def toString: String =
+      s"$timeSlot,$nDCG,$count"
+  }
+
 }

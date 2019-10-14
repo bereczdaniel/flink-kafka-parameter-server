@@ -4,7 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.11.7"
 
-lazy val flinkVersion = "1.7.1"
+//lazy val flinkVersion = "1.7.1"
+lazy val flinkVersion = "1.9.0"
 lazy val breezeVersion = "0.13"
 lazy val loggerVersion = "1.7.25"
 
