@@ -125,7 +125,8 @@ class OnlineTrainAndEval extends Serializable {
   //TODO move to another package?
   def mergeLogic(elements: Iterable[EvaluationOutput], K: Int): Recommendation = {
     val target = elements.map(_.itemId).max
-    val topK = elements.flatMap(_.topK).toList.sortBy(_.score).distinct.takeRight(K).map(_.itemId)
+//    val topK = elements.flatMap(_.topK).toList.sortBy(_.score).distinct.takeRight(K).map(_.itemId)
+    val topK = elements.flatMap(_.topK).toList.sortBy(_.score).takeRight(K).map(_.itemId)
     val id = elements.head.evaluationId
     val ts = elements.map(_.ts).max
     Recommendation(target, topK, id, ts)
