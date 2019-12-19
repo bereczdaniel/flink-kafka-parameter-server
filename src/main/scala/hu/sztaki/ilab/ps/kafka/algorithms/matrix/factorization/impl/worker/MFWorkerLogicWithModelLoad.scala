@@ -1,7 +1,9 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl.worker
 
-import hu.sztaki.ilab.ps.communication.Messages.Message
-import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
+import hu.sztaki.ilab.ps.common.types.RecSysMessages.{EvaluationRequest, ItemParameter, UserParameter}
+import hu.sztaki.ilab.ps.common.types.{ParameterServerOutput, WorkerInput}
+import hu.sztaki.ilab.ps.kafka.communication.Messages.{Message, Push}
+import hu.sztaki.ilab.ps.kafka.logic.worker.WorkerLogic
 import org.apache.flink.util.Collector
 import matrix.factorization.types.Vector
 
@@ -10,11 +12,11 @@ class MFWorkerLogicWithModelLoad(wl: MfWorkerLogic)
 
 
   override def onPullReceive(msg: Message[Int, Long, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Message[Long, Int, Vector]]]): Unit =
+                             out: Collector[Either[ParameterServerOutput, Message[Long, Int, Vector]]]): Unit =
     wl.onPullReceive(msg, out)
 
   override def onInputReceive(data: WorkerInput,
-                              out: Collector[Either[Types.ParameterServerOutput, Message[Long, Int, Vector]]]): Unit = {
+                              out: Collector[Either[ParameterServerOutput, Message[Long, Int, Vector]]]): Unit = {
 
     data match {
       case e @ EvaluationRequest(_, _, _, _, _) =>

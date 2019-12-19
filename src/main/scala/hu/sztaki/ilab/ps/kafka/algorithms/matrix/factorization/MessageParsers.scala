@@ -1,6 +1,6 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization
 
-import parameter.server.communication.Messages._
+import hu.sztaki.ilab.ps.kafka.communication.Messages.{Message, NotSupportedMessage, Pull, PullAnswer, Push}
 import matrix.factorization.types.Vector
 
 object MessageParsers {

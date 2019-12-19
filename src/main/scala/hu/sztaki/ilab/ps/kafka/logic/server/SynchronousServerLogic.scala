@@ -1,6 +1,7 @@
 package hu.sztaki.ilab.ps.kafka.logic.server
 
-import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
+import hu.sztaki.ilab.ps.kafka.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, ValueState}
 import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.util.Collector

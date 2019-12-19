@@ -1,14 +1,14 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl.worker
 
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
+import hu.sztaki.ilab.ps.common.types.RecSysMessages.{EvaluationOutput, EvaluationRequest}
+import hu.sztaki.ilab.ps.kafka.communication.Messages
+import hu.sztaki.ilab.ps.kafka.communication.Messages.{Pull, Push}
+import hu.sztaki.ilab.ps.kafka.logic.worker.WorkerLogic
 import matrix.factorization.LEMP.{LI, PruningStrategy}
 import matrix.factorization.model.ItemModel
-import matrix.factorization.types.Vector
+import matrix.factorization.types.{Prediction, Vector}
 import org.apache.flink.util.Collector
-import parameter.server.algorithms.matrix.factorization.RecSysMessages.{EvaluationOutput, EvaluationRequest}
-import parameter.server.communication.Messages
-import parameter.server.communication.Messages.{Pull, Push}
-import parameter.server.logic.worker.WorkerLogic
-import parameter.server.utils.Types.ParameterServerOutput
 
 import scala.collection.mutable
 
@@ -35,7 +35,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
     _request match {
       case None =>
         // when the observation which initiated the db query belongs to another worker - output a local topK for the observation with dummy additional data:
-        out.collect(Left(EvaluationOutput(-1, msg.destination, topK, -1)))
+        out.collect(Left(EvaluationOutput(-1, msg.destination, mutable.PriorityQueue[Prediction](topK: _*), -1)))
 
       case Some(request) =>
         // when the observation which initiated the db query belongs to this worker - output the local topK with the request data (itemId & ts):
@@ -47,7 +47,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
         //// in redis:
         //pushClient.evalSHA(pushScriptId.get, List(msg.source), userDelta.value.toList)
 
-        out.collect(Left(EvaluationOutput(request.itemId, request.evaluationId, topK, request.ts)))
+        out.collect(Left(EvaluationOutput(request.itemId, request.evaluationId, mutable.PriorityQueue[Prediction](topK: _*), request.ts)))
     }
   }
 

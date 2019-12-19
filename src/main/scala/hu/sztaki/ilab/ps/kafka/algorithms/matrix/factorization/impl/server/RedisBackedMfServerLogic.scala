@@ -1,12 +1,12 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl.server
 
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
+import hu.sztaki.ilab.ps.kafka.communication.Messages
+import hu.sztaki.ilab.ps.kafka.communication.Messages.PullAnswer
+import hu.sztaki.ilab.ps.kafka.logic.server.AsynchronousServerLogic
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
 import matrix.factorization.types.{ItemId, Vector}
-import parameter.server.communication.Messages
-import parameter.server.communication.Messages.PullAnswer
-import parameter.server.logic.server.AsynchronousServerLogic
-import parameter.server.utils.Types
 import scredis.{RedisCluster, Server}
 
 class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector,
@@ -21,7 +21,7 @@ class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
   @transient lazy val update: (Vector, Vector) => Vector = _update
 
   override def onPullReceive(pull: Messages.Pull[Long, Int, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
+                             out: Collector[Either[ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     //// original code with state:
     //out.collect(Right(PullAnswer(pull.dest, pull.inputStream, getOrElseUpdate(init(pull.dest)))))
 
@@ -57,7 +57,7 @@ class RedisBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
   }
 
   override def onPushReceive(push: Messages.Push[Long, Int, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
+                             out: Collector[Either[ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     //// original code with state:
     //val oldParam = model.value()
     //model.update(update(oldParam, push.msg))

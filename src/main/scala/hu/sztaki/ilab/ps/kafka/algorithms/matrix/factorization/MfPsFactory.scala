@@ -29,30 +29,14 @@ object MfPsFactory {
   def createPs(psImplType: String,
                mfProperties: GeneralMfProperties,
                parameters: ParameterTool,
-               inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] = {
-//    val generalParam = parseGeneralParameters(parameters)
-    val q = (psImplType match {
+               inputStream: DataStream[EvaluationRequest], env: StreamExecutionEnvironment): ParameterServerSkeleton[EvaluationRequest] =
+    (psImplType match {
       case "kafka" => new KafkaMfPsFactory
       case "kafkaredis" => new KafkaRedisMfPsFactory
       case "redis" => new RedisMfPsFactory
       case _ => throw new UnsupportedOperationException
-    })
-//      .createPs(mfProperties,
-//      parameters, RangedRandomFactorInitializerDescriptor(mfProperties.numFactors, mfProperties.randomInitRangeMin, mfProperties.randomInitRangeMax),
-//      inputStream, env)
-  }
-
-//  def parseGeneralParameters(parameters: ParameterTool): GeneralMfProperties = {
-//    val learningRate = parameters.getDouble("learningRate")
-//    val negativeSampleRate = parameters.getInt("negativeSampleRate")
-//    val numFactors = parameters.getInt("numFactors")
-//    val rangeMin = parameters.getDouble("randomInitRangeMin")
-//    val rangeMax = parameters.getDouble("randomInitRangeMax")
-//    val workerK = parameters.getInt("workerK")
-//    val bucketSize = parameters.getInt("bucketSize")
-//
-//    GeneralMfProperties(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax,
-//                     workerK, bucketSize)
-//  }
+    }).createPs(mfProperties,
+      parameters, RangedRandomFactorInitializerDescriptor(mfProperties.numFactors, mfProperties.randomInitRangeMin, mfProperties.randomInitRangeMax),
+      inputStream, env)
 
 }

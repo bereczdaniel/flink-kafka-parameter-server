@@ -3,7 +3,6 @@ package hu.sztaki.ilab.ps.kafka.utils
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 import org.apache.flink.api.common.typeinfo.TypeInformation
-import org.apache.flink.api.java.utils.ParameterTool
 
 object Utils {
 

@@ -1,8 +1,7 @@
 package hu.sztaki.ilab.ps.kafka.logic.worker
 
-import hu.sztaki.ilab.ps.communication.Messages.Message
+import hu.sztaki.ilab.ps.common.types.{ParameterServerOutput, WorkerInput}
 import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
-import hu.sztaki.ilab.ps.utils.Types.{ParameterServerOutput, WorkerInput}
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 import matrix.factorization.types.Parameter

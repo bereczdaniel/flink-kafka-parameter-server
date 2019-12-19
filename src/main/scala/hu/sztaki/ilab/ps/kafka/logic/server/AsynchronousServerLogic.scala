@@ -1,10 +1,10 @@
 package hu.sztaki.ilab.ps.kafka.logic.server
 
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
+import hu.sztaki.ilab.ps.kafka.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
 import org.apache.flink.api.common.state.ValueState
 import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.util.Collector
-import parameter.server.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
-import parameter.server.utils.Types.ParameterServerOutput
 import matrix.factorization.types.Parameter
 
 /**

@@ -1,14 +1,15 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl
 
+import hu.sztaki.ilab.ps.common.types.GeneralMfProperties
+import hu.sztaki.ilab.ps.common.types.RecSysMessages.EvaluationRequest
+import hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl.worker.{MfWorkerLogic, RedisMfWorkerToServerSink}
+import hu.sztaki.ilab.ps.kafka.{ParameterServerSkeleton, WorkerOnlyParameterServer}
+import hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.{MessageParsers, MfPsFactory}
+import hu.sztaki.ilab.ps.kafka.utils.connectors.redis.RedisPubSubSource
 import matrix.factorization.initializer.RangedRandomFactorInitializerDescriptor
 import matrix.factorization.types.Vector
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala._
-import parameter.server.algorithms.matrix.factorization.RecSysMessages.EvaluationRequest
-import parameter.server.algorithms.matrix.factorization.impl.worker.{MfWorkerLogic, RedisMfWorkerToServerSink}
-import parameter.server.algorithms.matrix.factorization.{GeneralMfProperties, MessageParsers, MfPsFactory}
-import parameter.server.utils.connectors.redis.RedisPubSubSource
-import parameter.server.{ParameterServerSkeleton, WorkerOnlyParameterServer}
 
 
 class RedisMfPsFactory extends MfPsFactory {

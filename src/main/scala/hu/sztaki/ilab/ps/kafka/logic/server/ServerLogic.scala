@@ -1,8 +1,8 @@
 package hu.sztaki.ilab.ps.kafka.logic.server
 
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
+import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
 import org.apache.flink.streaming.api.functions.ProcessFunction
-import parameter.server.communication.Messages.Message
-import parameter.server.utils.Types.ParameterServerOutput
 
 /**
   * Represents the server node in the parameter server architecture. It provides an abstraction layer over the Flink ProcessFunction.

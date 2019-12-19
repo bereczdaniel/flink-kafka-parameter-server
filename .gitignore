@@ -6,6 +6,7 @@ target
 *.iws
 .idea
 out
+*.out
 
 .cache/
 .history/

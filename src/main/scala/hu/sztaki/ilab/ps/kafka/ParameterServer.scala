@@ -1,6 +1,10 @@
 package hu.sztaki.ilab.ps.kafka
 
-import hu.sztaki.ilab.ps.common.types.WorkerInput
+import hu.sztaki.ilab.ps.common.types.{ParameterServerOutput, WorkerInput}
+import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
+import hu.sztaki.ilab.ps.kafka.logic.server.ServerLogic
+import hu.sztaki.ilab.ps.kafka.logic.worker.WorkerLogic
+import hu.sztaki.ilab.ps.kafka.utils.Utils
 import org.apache.flink.streaming.api.functions.sink.SinkFunction
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
@@ -42,7 +46,7 @@ class ParameterServer[T <: WorkerInput,
 
 
   //TODO rename : not start but build up the job graph, together with runPS (buildPS)
-  def start(): DataStream[ParameterServerOutput] = {
+  def buildJobGraph(): DataStream[ParameterServerOutput] = {
 
     val (serverOutput, serverToWorkerStream) =
       Utils.splitStream(

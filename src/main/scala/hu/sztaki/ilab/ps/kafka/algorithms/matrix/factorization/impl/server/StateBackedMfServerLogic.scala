@@ -1,12 +1,12 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl.server
 
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
+import hu.sztaki.ilab.ps.kafka.communication.Messages
+import hu.sztaki.ilab.ps.kafka.communication.Messages.PullAnswer
+import hu.sztaki.ilab.ps.kafka.logic.server.AsynchronousServerLogic
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.util.Collector
-import parameter.server.communication.Messages
-import parameter.server.communication.Messages.PullAnswer
-import parameter.server.logic.server.AsynchronousServerLogic
-import parameter.server.utils.Types
-import matrix.factorization.types.{Vector, ItemId}
+import matrix.factorization.types.{ItemId, Vector}
 
 class StateBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) => Vector)
   extends AsynchronousServerLogic[Long, Int, Vector] {
@@ -17,12 +17,12 @@ class StateBackedMfServerLogic(_init: Int => Vector, _update: (Vector, Vector) =
   @transient lazy val update: (Vector, Vector) => Vector = _update
 
   override def onPullReceive(pull: Messages.Pull[Long, Int, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
+                             out: Collector[Either[ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     out.collect(Right(PullAnswer(pull.dest, pull.src, getOrElseUpdate(init(pull.dest)))))
   }
 
   override def onPushReceive(push: Messages.Push[Long, Int, Vector],
-                             out: Collector[Either[Types.ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
+                             out: Collector[Either[ParameterServerOutput, Messages.Message[Int, Long, Vector]]]): Unit = {
     val oldParam = model.value()
 
     //TODO log or somehow signal the chosen path maybe?

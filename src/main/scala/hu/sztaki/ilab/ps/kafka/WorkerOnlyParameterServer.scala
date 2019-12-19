@@ -1,12 +1,12 @@
 package hu.sztaki.ilab.ps.kafka
 
+import hu.sztaki.ilab.ps.common.types.{ParameterServerOutput, WorkerInput}
+import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
+import hu.sztaki.ilab.ps.kafka.logic.worker.WorkerLogic
+import hu.sztaki.ilab.ps.kafka.utils.Utils
 import org.apache.flink.streaming.api.functions.sink.SinkFunction
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
-import parameter.server.communication.Messages.Message
-import parameter.server.logic.worker.WorkerLogic
-import parameter.server.utils.Types.{ParameterServerOutput, WorkerInput}
-import parameter.server.utils.Utils
 import matrix.factorization.types.Parameter
 
 class WorkerOnlyParameterServer[T <: WorkerInput,
@@ -21,7 +21,7 @@ class WorkerOnlyParameterServer[T <: WorkerInput,
                              )
   extends ParameterServerSkeleton[T] (env: StreamExecutionEnvironment, inputStream: DataStream[T]) {
 
-  def start(): DataStream[ParameterServerOutput] = {
+  def buildJobGraph(): DataStream[ParameterServerOutput] = {
 
     val (workerOutput, workerToServerStream) =
       Utils.splitStream(

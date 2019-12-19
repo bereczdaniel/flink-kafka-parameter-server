@@ -1,8 +1,8 @@
 package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization.impl.worker
 
-import parameter.server.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
-import parameter.server.utils.Utils
-import parameter.server.utils.connectors.redis.AbstractRedisSink
+import hu.sztaki.ilab.ps.kafka.communication.Messages.{Message, NotSupportedMessage, Pull, Push}
+import hu.sztaki.ilab.ps.kafka.utils.Utils
+import hu.sztaki.ilab.ps.kafka.utils.connectors.redis.AbstractRedisSink
 import matrix.factorization.types.Vector
 import scredis.protocol.Decoder
 import scredis.serialization._

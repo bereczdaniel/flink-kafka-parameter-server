@@ -1,7 +1,7 @@
 package hu.sztaki.ilab.ps.kafka.logic.worker
 
+import hu.sztaki.ilab.ps.common.types.WorkerInput
 import matrix.factorization.model.ModelState
-import parameter.server.utils.Types.WorkerInput
 import matrix.factorization.types.Parameter
 
 abstract class WorkerLogicWithModel[WK, SK, T <: WorkerInput, P <: Parameter]
