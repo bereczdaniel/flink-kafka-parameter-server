@@ -35,6 +35,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
     _request match {
       case None =>
         // when the observation which initiated the db query belongs to another worker - output a local topK for the observation with dummy additional data:
+        // msg.destination carries the evaluationId
         out.collect(Left(EvaluationOutput(-1, msg.destination, mutable.PriorityQueue[Prediction](topK: _*), -1)))
 
       case Some(request) =>
