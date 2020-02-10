@@ -1,6 +1,6 @@
 package hu.sztaki.ilab.ps.common.types
 
-import matrix.factorization.types.{TopK, Vector}
+import matrix.factorization.types.{ItemId, TopK, UserId, Vector}
 //import org.apache.flink.streaming.api.scala._
 
 object RecSysMessages {
@@ -37,5 +37,5 @@ object RecSysMessages {
 //      .map(parse)
 
 
-  case class EvaluationOutput(itemId: Int, evaluationId: Long, topK: TopK, ts: Long) extends ParameterServerOutput
+  case class EvaluationOutput(userId: UserId, itemId: ItemId, evaluationId: Long, topK: TopK, ts: Long) extends ParameterServerOutput
 }

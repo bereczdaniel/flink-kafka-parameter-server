@@ -2,44 +2,54 @@ package hu.sztaki.ilab.ps.common
 
 import hu.sztaki.ilab.ps.common.types.RecSysMessages.EvaluationOutput
 import hu.sztaki.ilab.ps.common.types._
-import matrix.factorization.types.Recommendation
+import matrix.factorization.types.{Recommendation, UserId}
+import org.apache.flink.api.common.functions.Partitioner
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
 import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows
 import org.apache.flink.streaming.api.windowing.time.Time
-import org.apache.flink.streaming.api.windowing.windows.{GlobalWindow, TimeWindow}
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
 
 object PsResultProcessUtils {
 
-  def mergeLocalTopKs(ps: DataStream[_ <:ParameterServerOutput], K: Int, parallelism: Int): DataStream[Recommendation] =
+  def mergeLocalTopKs(ps: DataStream[_ <:ParameterServerOutput], K: Int, parallelism: Int, memorySize: Int): DataStream[Recommendation] =
     merge(ps
       .flatMap(_ match {
         case eval: EvaluationOutput => Some(eval)
         case _ => throw new NotSupportedOutput
-      }), K: Int, parallelism: Int)
+      }), K, parallelism, memorySize)
 
-  private def merge(psOut: DataStream[EvaluationOutput], K: Int, parallelism: Int): DataStream[Recommendation] =
-    psOut
-      .keyBy(_.evaluationId)
-      .countWindow(parallelism)
-      .process(new ProcessWindowFunction[EvaluationOutput, Recommendation, Long, GlobalWindow] {
-        override def process(key: Long, context: Context,
-                             elements: Iterable[EvaluationOutput],
-                             out: Collector[Recommendation]): Unit = {
+//  private def merge(psOut: DataStream[EvaluationOutput], K: Int, parallelism: Int): DataStream[Recommendation] =
+//    psOut
+//      .keyBy(_.evaluationId)
+//      .countWindow(parallelism)
+//      .process(new ProcessWindowFunction[EvaluationOutput, Recommendation, Long, GlobalWindow] {
+//        override def process(key: Long, context: Context,
+//                             elements: Iterable[EvaluationOutput],
+//                             out: Collector[Recommendation]): Unit = {
+//
+//          out.collect(mergeLogic(elements, K))
+//        }
+//      })
 
-          out.collect(mergeLogic(elements, K))
-        }
-      })
+  // TODO: shophisticated solution needed? Consider ValueState?
+  private def merge(psOut: DataStream[EvaluationOutput], K: Int, parallelism: Int, memorySize: Int): DataStream[Recommendation] =
+    psOut.partitionCustom(new Partitioner[Int] {
+      override def partition(key: Int, numPartitions: Int): UserId = { key % numPartitions }
+    }, x => x.userId).flatMap(new CollectTopKFromEachLearnWorker(K, memorySize, parallelism))
 
 
-  private def mergeLogic(elements: Iterable[EvaluationOutput], K: Int): Recommendation = {
-    val target = elements.head.itemId
-    val topK = elements.flatMap(_.topK).toList.sortBy(_.score).takeRight(K).map(_.itemId)
-    val id = elements.head.evaluationId
-    val ts = elements.head.ts
-    Recommendation(target, topK, id, ts)
-  }
+
+//  private def mergeLogic(elements: Iterable[EvaluationOutput], K: Int): Recommendation = {
+//    val target = elements.head.itemId
+//    // TODO check which is correct? .sortBy(- _.score).take(K)
+////    val topK = elements.flatMap(_.topK).toList.sortBy(_.score).takeRight(K).map(_.itemId)
+//    val topK = elements.flatMap(_.topK).toList.sortBy(- _.score).take(K).map(_.itemId)
+//    val id = elements.head.evaluationId
+//    val ts = elements.head.ts
+//    Recommendation(target, topK, id, ts)
+//  }
 
   def processGlobalTopKs(recommendations: DataStream[Recommendation], ioProperties: GeneralIoProperties)
   : DataStream[AccumulatedNdcgResult] =

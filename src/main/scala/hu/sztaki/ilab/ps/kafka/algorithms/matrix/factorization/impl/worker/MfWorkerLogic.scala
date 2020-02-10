@@ -30,13 +30,11 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
 
     val topK = model.predict(userVector).toList
 
-    val _request = requestBuffer.get(msg.destination)
-
-    _request match {
+    requestBuffer.get(msg.destination)  match {
       case None =>
         // when the observation which initiated the db query belongs to another worker - output a local topK for the observation with dummy additional data:
         // msg.destination carries the evaluationId
-        out.collect(Left(EvaluationOutput(-1, msg.destination, mutable.PriorityQueue[Prediction](topK: _*), -1)))
+        out.collect(Left(EvaluationOutput(msg.source, -1, msg.destination, mutable.PriorityQueue[Prediction](topK: _*), -1)))
 
       case Some(request) =>
         // when the observation which initiated the db query belongs to this worker - output the local topK with the request data (itemId & ts):
@@ -48,7 +46,7 @@ class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: I
         //// in redis:
         //pushClient.evalSHA(pushScriptId.get, List(msg.source), userDelta.value.toList)
 
-        out.collect(Left(EvaluationOutput(request.itemId, request.evaluationId, mutable.PriorityQueue[Prediction](topK: _*), request.ts)))
+        out.collect(Left(EvaluationOutput(msg.source, request.itemId, request.evaluationId, mutable.PriorityQueue[Prediction](topK: _*), request.ts)))
     }
   }
 

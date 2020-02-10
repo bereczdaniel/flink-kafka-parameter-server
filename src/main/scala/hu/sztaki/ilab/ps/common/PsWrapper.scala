@@ -107,8 +107,9 @@ abstract class PsWrapper {
     val rangeMax = properties.getDouble("randomInitRangeMax")
     val workerK = properties.getInt("workerK")
     val bucketSize = properties.getInt("bucketSize")
+    val memorySize = properties.getInt("memorySize", 0)
 
-    GeneralMfProperties(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax, workerK, bucketSize)
+    GeneralMfProperties(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax, workerK, bucketSize, memorySize)
   }
 
   def runMf(ioProperties: GeneralIoProperties, mfProperties: GeneralMfProperties, parameterTool: ParameterTool)
@@ -118,7 +119,8 @@ abstract class PsWrapper {
 
 
     val psBuilder = (input: DataStream[EvaluationRequest], env: StreamExecutionEnvironment) =>
-      PsResultProcessUtils.mergeLocalTopKs(buildPs(input, mfProperties, ioProperties, parameterTool, env), ioProperties.K, ioProperties.parallelism)
+      PsResultProcessUtils.mergeLocalTopKs(buildPs(input, mfProperties, ioProperties, parameterTool, env),
+        ioProperties.K, ioProperties.parallelism, mfProperties.memorySize)
 
     val psOutput =  if (ioProperties.withDataStreamLogger) {
       JobLogger.doWithLogging[EvaluationRequest, Recommendation](readInput(env, ioProperties),
