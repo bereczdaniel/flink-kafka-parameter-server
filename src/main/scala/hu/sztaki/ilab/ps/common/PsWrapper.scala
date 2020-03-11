@@ -37,8 +37,9 @@ abstract class PsWrapper {
       case _ => throw new IllegalArgumentException("No input media specified")
     }).map(line => {
       val fields = line.split(",")
-      // TODO: - 1390209861L ???
-      EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209861L)
+      // TODO: - 1390209860L ???
+      //      EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong - 1390209860L)
+      EvaluationRequest(fields(2).toInt, fields(3).toInt, fields(0).toLong, 1.0, fields(1).toLong)
       //          EvaluationRequest(fields(1).toInt, fields(2).toInt, IDGenerator.next, 1.0, fields(0).toLong)
     })
 
