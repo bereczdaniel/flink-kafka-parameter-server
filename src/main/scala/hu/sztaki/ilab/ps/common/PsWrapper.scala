@@ -125,7 +125,8 @@ abstract class PsWrapper {
 
     val psOutput =  if (ioProperties.withDataStreamLogger) {
       JobLogger.doWithLogging[EvaluationRequest, Recommendation](readInput(env, ioProperties),
-        DbWriterFactory.createDbWriter(ioProperties.logBackend, parameterTool), env, "native",
+//        DbWriterFactory.createDbWriter(ioProperties.logBackend, parameterTool), env, "native",
+        DbWriterFactory.createDbWriter(ioProperties.logBackend, parameterTool), env, parameterTool.get("psImplTyp"),
         psBuilder, _.evaluationId, _.evaluationId
       )
     } else {

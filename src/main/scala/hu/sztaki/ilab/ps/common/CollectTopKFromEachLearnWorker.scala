@@ -1,7 +1,7 @@
 package hu.sztaki.ilab.ps.common
 
 import hu.sztaki.ilab.ps.common.types.RecSysMessages.EvaluationOutput
-import matrix.factorization.types._
+import matrix.factorization.types.{ItemId, Prediction, Recommendation, TopK, UserId, Vector}
 import org.apache.flink.api.common.functions.RichFlatMapFunction
 import org.apache.flink.util.Collector
 

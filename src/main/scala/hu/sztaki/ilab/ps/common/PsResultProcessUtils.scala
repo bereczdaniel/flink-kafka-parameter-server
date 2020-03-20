@@ -1,7 +1,7 @@
 package hu.sztaki.ilab.ps.common
 
 import hu.sztaki.ilab.ps.common.types.RecSysMessages.EvaluationOutput
-import hu.sztaki.ilab.ps.common.types._
+import hu.sztaki.ilab.ps.common.types.{AccumulatedNdcgResult, GeneralIoProperties, NdcgResult, NotSupportedOutput, ParameterServerOutput}
 import matrix.factorization.types.{Recommendation, UserId}
 import org.apache.flink.api.common.functions.Partitioner
 import org.apache.flink.streaming.api.scala._

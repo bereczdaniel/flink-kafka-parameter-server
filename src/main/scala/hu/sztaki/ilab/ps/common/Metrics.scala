@@ -6,6 +6,13 @@ import _root_.matrix.factorization.types.ItemId
 
 object Metrics {
 
+  /**
+    *
+    * @param topK
+    * @param targetItemId
+    * @return nDCG between 0 and 1, 1.0 if targetItemId is the first (leftmost) element of topK,
+    *         -0.0 if the topK does not contain targetItemId
+    */
   def nDCG(topK: List[ItemId], targetItemId: ItemId): Double = {
     val position = topK.indexOf(targetItemId) + 1
     1 / (log2(position) + 1)
