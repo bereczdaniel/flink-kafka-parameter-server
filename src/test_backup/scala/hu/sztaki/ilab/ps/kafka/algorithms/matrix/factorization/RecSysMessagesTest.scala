@@ -2,7 +2,7 @@ package hu.sztaki.ilab.ps.kafka.algorithms.matrix.factorization
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.prop.PropertyChecks
-import parameter.server.algorithms.matrix.factorization.RecSysMessages._
+import hu.sztaki.ilab.ps.common.types.RecSysMessages._
 import matrix.factorization.types.Vector
 
 class RecSysMessagesTest extends FlatSpec with PropertyChecks with Matchers {

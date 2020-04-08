@@ -2,10 +2,8 @@ package hu.sztaki.ilab.ps.kafka
 
 import hu.sztaki.ilab.ps.kafka.communication.Messages.Message
 import org.apache.flink.streaming.api.functions.sink.SinkFunction
-import parameter.server.communication.Messages.Message
-import parameter.server.utils.Types
 import matrix.factorization.types.Vector
-
+import hu.sztaki.ilab.ps.common.types.ParameterServerOutput
 import scala.collection.mutable.ArrayBuffer
 
 object Utils {
@@ -39,7 +37,7 @@ object CollectSink {
 }
 
 // create a testing sink
-class CollectOutputSink[T <: Types.ParameterServerOutput] extends SinkFunction[T] {
+class CollectOutputSink[T <: ParameterServerOutput] extends SinkFunction[T] {
 
   override def invoke(value: T): Unit = {
     synchronized {
@@ -51,5 +49,5 @@ class CollectOutputSink[T <: Types.ParameterServerOutput] extends SinkFunction[T
 object CollectOutputSink {
 
   // must be static
-  val values: ArrayBuffer[Types.ParameterServerOutput] = new ArrayBuffer[Types.ParameterServerOutput]()
+  val values: ArrayBuffer[ParameterServerOutput] = new ArrayBuffer[ParameterServerOutput]()
 }
