@@ -10,6 +10,7 @@ import matrix.factorization.initializer.RangedRandomFactorInitializerDescriptor
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import matrix.factorization.types.Vector
+import org.apache.flink.streaming.api.scala._
 
 class KafkaMfPsFactory extends MfPsFactory {
 

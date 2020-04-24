@@ -10,6 +10,7 @@ import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import matrix.factorization.types.Parameter
+import org.apache.flink.api.common.typeinfo.TypeInformation
 
 
 /**
@@ -21,7 +22,7 @@ import matrix.factorization.types.Parameter
   */
 class KafkaPsFactory[T <: WorkerInput,
                       P <: Parameter,
-                      WK, SK] {
+                      WK: TypeInformation, SK: TypeInformation] {
 
   lazy val properties = new Properties()
 

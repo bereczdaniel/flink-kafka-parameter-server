@@ -9,6 +9,7 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction
 import org.apache.flink.streaming.api.functions.source.SourceFunction
 import org.apache.flink.streaming.api.scala._
 import matrix.factorization.types.Parameter
+import org.apache.flink.api.common.typeinfo.TypeInformation
 
 // TODO rename it to express it is a PS based on source/sink communication btw worker-server
 
@@ -33,7 +34,7 @@ import matrix.factorization.types.Parameter
   */
 class ParameterServer[T <: WorkerInput,
                       P <: Parameter,
-                      WK, SK](
+                      WK: TypeInformation, SK: TypeInformation](
                                env: StreamExecutionEnvironment,
                                inputStream: DataStream[T],
                                workerLogic: WorkerLogic[WK, SK, T, P], serverLogic: ServerLogic[WK, SK, P],
@@ -76,14 +77,14 @@ class ParameterServer[T <: WorkerInput,
       .map(serverToWorkerParse)
 
   /**
-    * Add the incoming messages as a Kafka source, parse them and key them by their hashcode
+    * Add the incoming messages as a Kafka source, parse them and key them by their destination
     * @return Messages from worker to the server
     */
   def workerToServer(): DataStream[Message[WK, SK, P]] =
     env
       .addSource(workerToServerSource)
       .map[Message[WK, SK, P]](workerToServerParse)
-      .keyBy(_.destination.hashCode())
+      .keyBy(_.destination)
 
   /**
     * Connects and partitions the incoming streams of the worker nodes (outer world + server messages)
@@ -94,11 +95,11 @@ class ParameterServer[T <: WorkerInput,
   def workerInput(inputStream: DataStream[T], serverToWorkerStream: DataStream[Message[SK, WK, P]]): ConnectedStreams[Message[SK, WK, P], T] = {
     if (broadcastServerToWorkers)
       serverToWorkerStream.broadcast
-        .connect(inputStream.keyBy(_.destination.hashCode()))
+        .connect(inputStream.keyBy(_.destination))
     else
       serverToWorkerStream
         .connect(inputStream)
-        .keyBy(_.destination.hashCode(), _.destination.hashCode())
+        .keyBy(_.destination, _.destination)
   }
 
   /**
