@@ -24,7 +24,7 @@ class RedisMfPsFactory extends MfPsFactory {
     new WorkerOnlyParameterServer[EvaluationRequest, Vector, Long, Int](
       env,
       inputStream = inputStream,
-      workerLogic = new MfWorkerLogic(generalMfProperties.numFactors, generalMfProperties.learningRate,
+      workerLogic = new MfWorkerLogic(generalMfProperties.numFactors, generalMfProperties.learningRate, lambda = generalMfProperties.lambda, normalizationThreshold = generalMfProperties.normalizationThreshold,
         generalMfProperties.negativeSampleRate, generalMfProperties.randomInitRangeMin, generalMfProperties.randomInitRangeMax, generalMfProperties.workerK,
         generalMfProperties.bucketSize),
       serverToWorkerSource = new RedisPubSubSource(hostName, port, channelName),

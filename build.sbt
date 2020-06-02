@@ -7,7 +7,7 @@ scalaVersion := "2.11.7"
 //lazy val flinkVersion = "1.7.1"
 lazy val flinkVersion = "1.9.0"
 lazy val breezeVersion = "0.13"
-lazy val loggerVersion = "1.7.25"
+lazy val loggerVersion = "1.7.29"
 
 lazy val commonDependencies = Seq(
   "org.scalatest" % "scalatest_2.11" % "3.0.1" % "test",
@@ -67,7 +67,8 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= breezeDependencies.map(_ % "compile"),
     libraryDependencies ++= couchbaseDependencies,
     libraryDependencies ++= redisDependencies,
-    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/matrix-factorization_2.11-0.1.jar",
+    //    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/matrix-factorization_2.11-0.1.jar",
+    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.12" from "http://info.ilab.sztaki.hu/~lukacsg/matrix-factorization-assembly-0.12.jar",
     libraryDependencies += "hu.sztaki.ilab" % "data-stream-logger" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/data-stream-logger_2.11-0.1.jar"
   )
 

@@ -12,12 +12,13 @@ import org.apache.flink.util.Collector
 
 import scala.collection.mutable
 
-class MfWorkerLogic(numFactors: Int, learningRate: Double, negativeSampleRate: Int,
-                    rangeMin: Double, rangeMax: Double,
+class MfWorkerLogic(numFactors: Int, learningRate: Double, lambda: Double, normalizationThreshold: Double,
+                    negativeSampleRate: Int, rangeMin: Double, rangeMax: Double,
                     workerK: Int, bucketSize: Int, pruningStrategy: PruningStrategy = LI(5, 2.5))
   extends WorkerLogic[Long, Int, EvaluationRequest, Vector]{
 
-  lazy val model = new ItemModel(learningRate, negativeSampleRate, numFactors, rangeMin, rangeMax, bucketSize, workerK, pruningStrategy)
+  lazy val model = new ItemModel(learningRate, lambda, normalizationThreshold, negativeSampleRate, numFactors, rangeMin, rangeMax, bucketSize, workerK, pruningStrategy)
+//  lazy val model = new ItemModel(learningRate, negativeSampleRate, numFactors, rangeMin, rangeMax, bucketSize, workerK, pruningStrategy)
 
   lazy val requestBuffer = new mutable.HashMap[Long, EvaluationRequest]()
 

@@ -102,6 +102,8 @@ abstract class PsWrapper {
     */
   def parseGeneralMfProperties(properties: ParameterTool): GeneralMfProperties = {
     val learningRate = properties.getDouble("learningRate")
+    val lambda = properties.getDouble("lambda")
+    val normalizationThreshold = properties.getDouble("normalizationThreshold")
     val negativeSampleRate = properties.getInt("negativeSampleRate")
     val numFactors = properties.getInt("numFactors")
     val rangeMin = properties.getDouble("randomInitRangeMin")
@@ -110,7 +112,7 @@ abstract class PsWrapper {
     val bucketSize = properties.getInt("bucketSize")
     val memorySize = properties.getInt("memorySize", 0)
 
-    GeneralMfProperties(learningRate, numFactors, negativeSampleRate, rangeMin, rangeMax, workerK, bucketSize, memorySize)
+    GeneralMfProperties(learningRate, lambda, normalizationThreshold, numFactors, negativeSampleRate, rangeMin, rangeMax, workerK, bucketSize, memorySize)
   }
 
   def runMf(ioProperties: GeneralIoProperties, mfProperties: GeneralMfProperties, parameterTool: ParameterTool)

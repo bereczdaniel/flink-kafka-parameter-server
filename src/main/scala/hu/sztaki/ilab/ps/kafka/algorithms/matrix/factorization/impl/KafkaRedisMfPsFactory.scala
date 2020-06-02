@@ -33,7 +33,7 @@ class KafkaRedisMfPsFactory extends MfPsFactory {
     new KafkaPsFactory[EvaluationRequest, Vector, Long, Int].createPs(
       env = env,
       inputStream = inputStream,
-      workerLogic = new MfWorkerLogic(generalMfProperties.numFactors, generalMfProperties.learningRate,
+      workerLogic = new MfWorkerLogic(generalMfProperties.numFactors, generalMfProperties.learningRate, lambda = generalMfProperties.lambda, normalizationThreshold = generalMfProperties.normalizationThreshold,
         generalMfProperties.negativeSampleRate, generalMfProperties.randomInitRangeMin, generalMfProperties.randomInitRangeMax, generalMfProperties.workerK,
         generalMfProperties.bucketSize),
       serverLogic = new RedisBackedMfServerLogic(x => Vector(factorInitDesc.open().nextFactor(x.hashCode())), Vector.vectorSum, redisHostName, redisPort),
