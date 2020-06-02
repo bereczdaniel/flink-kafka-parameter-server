@@ -15,7 +15,7 @@ lazy val commonDependencies = Seq(
   "org.slf4j" % "slf4j-api" % loggerVersion,
   "org.slf4j" % "slf4j-simple" % loggerVersion,
   "org.clapper" %% "grizzled-slf4j" % "1.0.2",
-  "com.typesafe" % "config" % "1.3.1"
+  "com.typesafe" % "config" % "1.3.3"
 )
 
 lazy val json4s = Seq(
@@ -68,8 +68,9 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= couchbaseDependencies,
     libraryDependencies ++= redisDependencies,
     //    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/matrix-factorization_2.11-0.1.jar",
-    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.12" from "http://info.ilab.sztaki.hu/~lukacsg/matrix-factorization-assembly-0.12.jar",
-    libraryDependencies += "hu.sztaki.ilab" % "data-stream-logger" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/data-stream-logger_2.11-0.1.jar"
+//    libraryDependencies += "hu.sztaki.ilab" % "matrix-factorization" % "0.12" from "http://info.ilab.sztaki.hu/~lukacsg/matrix-factorization-assembly-0.12.jar",
+    libraryDependencies += "hu.sztaki.ilab" % "flink-mf-common" % "0.2" from "http://info.ilab.sztaki.hu/~lukacsg/flink-mf-common-assembly-0.2.jar",
+//    libraryDependencies += "hu.sztaki.ilab" % "data-stream-logger" % "0.1" from "http://info.ilab.sztaki.hu/~bdaniel/data-stream-logger_2.11-0.1.jar"
   )
 
 lazy val commonSettings = Seq(
